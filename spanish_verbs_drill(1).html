@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spanish Verb Drill</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f3ee;
+    --card: #ffffff;
+    --ink: #1c1917;
+    --muted: #78716c;
+    --accent: #c2410c;
+    --accent2: #0369a1;
+    --gold: #d97706;
+    --green: #15803d;
+    --border: #e5e0d8;
+    --shadow: rgba(28,25,23,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 20px 60px;
+    background-image:
+      radial-gradient(circle at 10% 90%, rgba(194,65,12,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 90% 10%, rgba(3,105,161,0.05) 0%, transparent 50%);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 2.6rem;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  header h1 em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin-top: 8px;
+    font-weight: 400;
+  }
+
+  /* Pronoun filter */
+  .section-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 24px 0 10px;
+    text-align: center;
+  }
+
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 6px;
+    max-width: 640px;
+  }
+
+  .pill {
+    padding: 7px 16px;
+    border-radius: 100px;
+    border: 1.5px solid var(--border);
+    background: white;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.83rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+
+  .pill:hover { border-color: var(--accent); color: var(--accent); }
+  .pill.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .pill.active-blue { background: var(--accent2); border-color: var(--accent2); color: white; }
+
+  /* Main card */
+  .card-wrap {
+    width: 100%;
+    max-width: 580px;
+    margin: 28px 0 20px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 24px;
+    padding: 52px 44px 44px;
+    text-align: center;
+    position: relative;
+    height: 320px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 40px var(--shadow), 0 1px 0 rgba(255,255,255,0.8) inset;
+    transition: box-shadow 0.2s;
+    overflow: hidden;
+  }
+
+  .card:hover { box-shadow: 0 12px 50px var(--shadow); }
+
+  .pronoun-badge {
+    position: absolute;
+    top: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .badge-yo { background: rgba(194,65,12,0.1); color: var(--accent); border: 1px solid rgba(194,65,12,0.2); }
+  .badge-tu { background: rgba(101,56,168,0.1); color: #6538a8; border: 1px solid rgba(101,56,168,0.2); }
+  .badge-el { background: rgba(3,105,161,0.1); color: var(--accent2); border: 1px solid rgba(3,105,161,0.2); }
+  .badge-ella { background: rgba(217,119,6,0.1); color: var(--gold); border: 1px solid rgba(217,119,6,0.2); }
+
+  .card-counter {
+    position: absolute;
+    top: 22px;
+    right: 24px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .verb-display {
+    font-family: 'Fraunces', serif;
+    font-size: 3.6rem;
+    font-weight: 900;
+    color: var(--ink);
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .verb-type {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 4px;
+  }
+
+  .answer-block {
+    margin-top: 30px;
+    padding-top: 26px;
+    border-top: 1.5px solid var(--border);
+    width: 100%;
+    animation: rise 0.3s ease;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .answer-pronoun {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .answer-english {
+    font-family: 'Fraunces', serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: -1px;
+    line-height: 1.1;
+  }
+
+  .answer-note {
+    margin-top: 10px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* Irregular badge */
+  .irreg-tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: rgba(217,119,6,0.1);
+    color: var(--gold);
+    border: 1px solid rgba(217,119,6,0.25);
+    border-radius: 6px;
+    padding: 2px 8px;
+    margin-top: 8px;
+  }
+
+  /* Buttons */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 580px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 15px 18px;
+    border-radius: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    border: none;
+    min-width: 120px;
+  }
+
+  .btn-reveal {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 4px 16px rgba(194,65,12,0.3);
+  }
+
+  .btn-reveal:hover { background: #b83d0b; transform: translateY(-1px); }
+
+  .btn-next {
+    background: white;
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+  }
+
+  .btn-next:hover { border-color: var(--ink); transform: translateY(-1px); }
+
+  .btn-shuffle {
+    background: white;
+    color: var(--accent2);
+    border: 1.5px solid rgba(3,105,161,0.25);
+    flex: 0 0 auto;
+  }
+
+  .btn-shuffle:hover { background: rgba(3,105,161,0.05); }
+
+  .hidden { display: none !important; }
+
+  /* Score */
+  .scorebar {
+    display: flex;
+    gap: 20px;
+    margin: 20px 0 0;
+    font-size: 0.88rem;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .scorebar strong { color: var(--ink); font-size: 1rem; }
+
+  /* Progress */
+  .prog-wrap {
+    width: 100%;
+    max-width: 580px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 4px;
+    margin: 16px 0 0;
+    overflow: hidden;
+  }
+
+  .prog-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+
+  /* Verb list toggle */
+  .verb-list-toggle {
+    margin-top: 28px;
+    font-size: 0.82rem;
+    color: var(--accent2);
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-align: center;
+  }
+
+  .verb-table {
+    max-width: 580px;
+    width: 100%;
+    margin-top: 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    background: white;
+    font-size: 0.85rem;
+  }
+
+  .verb-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .verb-table th {
+    background: var(--bg);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .verb-table td {
+    padding: 9px 14px;
+    border-top: 1px solid var(--border);
+    color: var(--ink);
+  }
+
+  .verb-table td:first-child { font-family: 'Fraunces', serif; font-size: 1rem; font-weight: 700; }
+  .verb-table tr:hover td { background: var(--bg); }
+  .irreg { color: var(--gold); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Verb <em>Drill</em></h1>
+  <p>See the Spanish conjugation — say the English to yourself — <strong>Spacebar</strong> to reveal &amp; advance</p>
+</header>
+
+<div class="section-label">Filter by pronoun</div>
+<div class="filter-row" id="pronoun-filters">
+  <button class="pill active" data-p="all" onclick="setFilter('pronoun','all',this)">All</button>
+  <button class="pill" data-p="yo" onclick="setFilter('pronoun','yo',this)">Yo (I)</button>
+  <button class="pill" data-p="tu" onclick="setFilter('pronoun','tu',this)">Tú (You)</button>
+  <button class="pill" data-p="el" onclick="setFilter('pronoun','el',this)">Él (He)</button>
+  <button class="pill" data-p="ella" onclick="setFilter('pronoun','ella',this)">Ella (She)</button>
+</div>
+
+<div class="section-label">Filter by verb type</div>
+<div class="filter-row" id="type-filters">
+  <button class="pill active" data-t="all" onclick="setFilter('type','all',this)">All verbs</button>
+  <button class="pill" data-t="regular" onclick="setFilter('type','regular',this)">Regular only</button>
+  <button class="pill" data-t="irregular" onclick="setFilter('type','irregular',this)">Irregular only</button>
+</div>
+
+<div class="card-wrap">
+  <div class="card" id="card">
+    <div class="pronoun-badge badge-yo" id="p-badge">YO</div>
+    <div class="card-counter" id="counter">1 / 25</div>
+    <div class="verb-display" id="verb-display">—</div>
+    <div class="verb-type" id="verb-type"></div>
+    <div class="answer-block hidden" id="answer-block">
+      <div class="answer-pronoun" id="ans-pronoun"></div>
+      <div class="answer-english" id="ans-english">—</div>
+      <div class="answer-note" id="ans-note"></div>
+    </div>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="btn btn-reveal" id="revealBtn" onclick="reveal()">👁 Reveal</button>
+  <button class="btn btn-next hidden" id="nextBtn" onclick="next()">→ Next</button>
+  <button class="btn btn-shuffle" onclick="reshuffle()">⟳ Shuffle</button>
+</div>
+
+<div class="scorebar">
+  <div>Seen: <strong id="s-seen">0</strong></div>
+  <div>Remaining: <strong id="s-left">—</strong></div>
+</div>
+
+<div class="prog-wrap"><div class="prog-bar" id="prog" style="width:0%"></div></div>
+
+<div class="verb-list-toggle" onclick="toggleTable()">📋 Show / hide full verb reference table</div>
+<div class="verb-table hidden" id="verb-table">
+  <table>
+    <thead><tr><th>Yo (I)</th><th>Tú (You)</th><th>Él/Ella</th><th>English</th><th>Type</th></tr></thead>
+    <tbody id="table-body"></tbody>
+  </table>
+</div>
+
+<script>
+const verbs = [
+  { inf:"ser",      yo:"soy",      tu:"eres",      el:"es",       en:"to be (permanent)", note:"Permanent states — nationality, profession", irreg:true },
+  { inf:"estar",    yo:"estoy",    tu:"estás",     el:"está",     en:"to be (temporary)", note:"Feelings, location, temporary states", irreg:true },
+  { inf:"tener",    yo:"tengo",    tu:"tienes",    el:"tiene",    en:"to have", irreg:true },
+  { inf:"hacer",    yo:"hago",     tu:"haces",     el:"hace",     en:"to do / make", irreg:true },
+  { inf:"ir",       yo:"voy",      tu:"vas",       el:"va",       en:"to go", irreg:true },
+  { inf:"venir",    yo:"vengo",    tu:"vienes",    el:"viene",    en:"to come", irreg:true },
+  { inf:"querer",   yo:"quiero",   tu:"quieres",   el:"quiere",   en:"to want", irreg:true },
+  { inf:"poder",    yo:"puedo",    tu:"puedes",    el:"puede",    en:"to be able to / can", irreg:true },
+  { inf:"deber",    yo:"debo",     tu:"debes",     el:"debe",     en:"to must / should", irreg:false },
+  { inf:"necesitar",yo:"necesito", tu:"necesitas", el:"necesita", en:"to need", irreg:false },
+  { inf:"saber",    yo:"sé",       tu:"sabes",     el:"sabe",     en:"to know (a fact)", irreg:true },
+  { inf:"conocer",  yo:"conozco",  tu:"conoces",   el:"conoce",   en:"to know (a person/place)", irreg:true },
+  { inf:"hablar",   yo:"hablo",    tu:"hablas",    el:"habla",    en:"to speak", irreg:false },
+  { inf:"comer",    yo:"como",     tu:"comes",     el:"come",     en:"to eat", irreg:false },
+  { inf:"beber",    yo:"bebo",     tu:"bebes",     el:"bebe",     en:"to drink", irreg:false },
+  { inf:"vivir",    yo:"vivo",     tu:"vives",     el:"vive",     en:"to live", irreg:false },
+  { inf:"trabajar", yo:"trabajo",  tu:"trabajas",  el:"trabaja",  en:"to work", irreg:false },
+  { inf:"comprar",  yo:"compro",   tu:"compras",   el:"compra",   en:"to buy", irreg:false },
+  { inf:"ver",      yo:"veo",      tu:"ves",       el:"ve",       en:"to see / watch", irreg:true },
+  { inf:"escuchar", yo:"escucho",  tu:"escuchas",  el:"escucha",  en:"to listen", irreg:false },
+  { inf:"leer",     yo:"leo",      tu:"lees",      el:"lee",      en:"to read", irreg:false },
+  { inf:"escribir", yo:"escribo",  tu:"escribes",  el:"escribe",  en:"to write", irreg:false },
+  { inf:"pensar",   yo:"pienso",   tu:"piensas",   el:"piensa",   en:"to think", irreg:true },
+  { inf:"llamar",   yo:"llamo",    tu:"llamas",    el:"llama",    en:"to call", irreg:false },
+  { inf:"dar",      yo:"doy",      tu:"das",       el:"da",       en:"to give", irreg:true },
+  { inf:"poner",    yo:"pongo",    tu:"pones",     el:"pone",     en:"to put", irreg:true },
+];
+
+const pronouns = ["yo","tu","el","ella"];
+const pronounLabels = { yo:"Yo", tu:"Tú", el:"Él", ella:"Ella" };
+const pronounEnglish = { yo:"I", tu:"You", el:"He", ella:"She" };
+const badgeClass = { yo:"badge-yo", tu:"badge-tu", el:"badge-el", ella:"badge-ella" };
+
+let filterPronoun = "all";
+let filterType = "all";
+let deck = [];
+let idx = 0;
+let seen = 0;
+let revealed = false;
+
+function buildDeck() {
+  let filtered = verbs;
+  if (filterType === "regular") filtered = filtered.filter(v => !v.irreg);
+  if (filterType === "irregular") filtered = filtered.filter(v => v.irreg);
+
+  let ps = filterPronoun === "all" ? pronouns : [filterPronoun];
+
+  deck = [];
+  filtered.forEach(v => {
+    ps.forEach(p => {
+      deck.push({ verb:v, pronoun:p });
+    });
+  });
+
+  deck = deck.sort(() => Math.random() - 0.5);
+  idx = 0; seen = 0;
+  updateScore();
+  showCard();
+}
+
+function getForm(verb, pronoun) {
+  if (pronoun === "yo")   return verb.yo;
+  if (pronoun === "tu")   return verb.tu;
+  return verb.el; // el and ella share the same form
+}
+
+function showCard() {
+  if (idx >= deck.length) { showDone(); return; }
+  const { verb, pronoun } = deck[idx];
+
+  const badge = document.getElementById('p-badge');
+  badge.textContent = pronounLabels[pronoun];
+  badge.className = "pronoun-badge " + badgeClass[pronoun];
+
+  document.getElementById('verb-display').textContent = getForm(verb, pronoun);
+  document.getElementById('verb-type').textContent = verb.irreg ? "" : "regular verb";
+  document.getElementById('counter').textContent = `${idx+1} / ${deck.length}`;
+
+  document.getElementById('answer-block').classList.add('hidden');
+  document.getElementById('revealBtn').classList.remove('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+
+  document.getElementById('prog').style.width = (idx / deck.length * 100) + '%';
+  revealed = false;
+}
+
+function reveal() {
+  const { verb, pronoun } = deck[idx];
+
+  document.getElementById('ans-pronoun').textContent = pronounEnglish[pronoun] + "...";
+  document.getElementById('ans-english').textContent = pronounEnglish[pronoun] + " " + getEnglishForm(verb, pronoun);
+  document.getElementById('ans-note').innerHTML = verb.irreg
+    ? `<span class="irreg-tag">⚠ irregular</span> &nbsp; infinitive: <em>${verb.inf}</em> — ${verb.en}`
+    : `infinitive: <em>${verb.inf}</em> — ${verb.en}`;
+
+  document.getElementById('answer-block').classList.remove('hidden');
+  document.getElementById('revealBtn').classList.add('hidden');
+  document.getElementById('nextBtn').classList.remove('hidden');
+
+  if (!revealed) { seen++; updateScore(); revealed = true; }
+}
+
+function getEnglishForm(verb, pronoun) {
+  const raw = verb.en.replace("to ","");
+  if (pronoun === "yo") {
+    if (raw === "be (permanent)" || raw === "be (temporary)") return "am";
+    if (raw === "do / make") return "do / make";
+    return raw;
+  }
+  if (pronoun === "tu") {
+    // English "you" form — same as infinitive base
+    if (raw === "be (permanent)" || raw === "be (temporary)") return "are";
+    if (raw === "do / make") return "do / make";
+    return raw;
+  }
+  // he / she
+  if (raw === "be (permanent)" || raw === "be (temporary)") return "is";
+  if (raw === "have") return "has";
+  if (raw === "do / make") return "does / makes";
+  if (raw === "go") return "goes";
+  if (raw === "come") return "comes";
+  if (raw.endsWith("ch") || raw.endsWith("sh") || raw.endsWith("x")) return raw + "es";
+  return raw + "s";
+}
+
+function next() { idx++; showCard(); }
+
+function reshuffle() { buildDeck(); }
+
+function updateScore() {
+  document.getElementById('s-seen').textContent = seen;
+  document.getElementById('s-left').textContent = Math.max(0, deck.length - idx);
+}
+
+function setFilter(kind, val, btn) {
+  if (kind === 'pronoun') {
+    filterPronoun = val;
+    document.querySelectorAll('#pronoun-filters .pill').forEach(b => b.classList.remove('active'));
+  } else {
+    filterType = val;
+    document.querySelectorAll('#type-filters .pill').forEach(b => b.classList.remove('active'));
+  }
+  btn.classList.add('active');
+  buildDeck();
+}
+
+function showDone() {
+  document.getElementById('card').innerHTML = `
+    <div style="text-align:center; padding:20px">
+      <div style="font-size:2.8rem; margin-bottom:12px">🎉</div>
+      <div style="font-family:'Fraunces',serif; font-size:2rem; font-weight:900; letter-spacing:-1px; margin-bottom:10px">¡Terminado!</div>
+      <div style="color:var(--muted); font-size:0.95rem;">You went through all ${deck.length} cards.<br>Click Shuffle to go again!</div>
+    </div>`;
+  document.getElementById('revealBtn').classList.add('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('prog').style.width = '100%';
+}
+
+function toggleTable() {
+  document.getElementById('verb-table').classList.toggle('hidden');
+}
+
+// Build reference table
+function buildTable() {
+  const tbody = document.getElementById('table-body');
+  verbs.forEach(v => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${v.yo}</td>
+      <td>${v.tu}</td>
+      <td>${v.el}</td>
+      <td>${v.en}</td>
+      <td>${v.irreg ? '<span class="irreg">irregular</span>' : 'regular'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// Spacebar: reveal then next
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space' || e.key === ' ') {
+    e.preventDefault();
+    if (!revealed) reveal();
+    else next();
+  }
+});
+
+buildTable();
+buildDeck();
+</script>
+
+</body>
+</html>
