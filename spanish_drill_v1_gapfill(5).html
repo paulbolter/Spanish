@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spanish Drill</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1923;
+    --card: #162030;
+    --ink: #e8e0d0;
+    --muted: #7a8a9a;
+    --accent: #e8a020;
+    --green: #4db87a;
+    --yellow: #facc15;
+    --red: #f87171;
+    --border: rgba(255,255,255,0.07);
+    --shadow: rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 20px 60px;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(232,160,32,0.06) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 90%, rgba(77,184,122,0.05) 0%, transparent 55%);
+  }
+
+  header { text-align: center; margin-bottom: 10px; }
+  header h1 { font-family: 'Lora', serif; font-size: 2.4rem; font-weight: 700; letter-spacing: -0.5px; color: var(--ink); line-height: 1.1; }
+  header h1 em { font-style: italic; color: var(--accent); }
+  header p { color: var(--muted); font-size: 0.88rem; margin-top: 8px; }
+
+  .mode-toggle { display: flex; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 14px; padding: 4px; gap: 4px; margin: 20px 0 6px; }
+  .mode-btn { padding: 10px 20px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.86rem; font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--muted); transition: all 0.2s; }
+  .mode-btn.active { background: var(--accent); color: #0f1923; box-shadow: 0 2px 12px rgba(232,160,32,0.3); }
+  .mode-btn:not(.active):hover { color: var(--ink); background: rgba(255,255,255,0.06); }
+  .mode-hint { font-size: 0.8rem; color: var(--muted); margin-bottom: 16px; text-align: center; }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 680px; margin: 10px 0; font-size: 0.83rem; color: var(--muted); font-weight: 500; }
+  .prog-wrap { width: 100%; max-width: 680px; height: 3px; background: rgba(255,255,255,0.06); border-radius: 4px; margin-bottom: 18px; overflow: hidden; }
+  .prog-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 4px; transition: width 0.4s ease; }
+
+  .score-row { display: flex; gap: 10px; margin-bottom: 16px; }
+  .score-pill { padding: 5px 14px; border-radius: 100px; font-size: 0.8rem; font-weight: 600; }
+  .pill-green  { background: rgba(77,184,122,0.12);  color: var(--green);  border: 1px solid rgba(77,184,122,0.22); }
+  .pill-yellow { background: rgba(250,204,21,0.12);  color: var(--yellow); border: 1px solid rgba(250,204,21,0.22); }
+
+  .card-wrap { width: 100%; max-width: 680px; margin-bottom: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 44px 36px; position: relative; min-height: 220px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 12px 50px var(--shadow); }
+  .sentence-num { position: absolute; top: 20px; right: 22px; font-size: 0.75rem; color: var(--muted); font-weight: 600; letter-spacing: 1px; }
+
+  .section-label { font-size: 0.66rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; opacity: 0.8; }
+  .label-es { color: var(--accent); }
+  .label-en { color: var(--green); }
+  .label-muted { color: var(--muted); }
+
+  .spanish-sentence { font-family: 'Lora', serif; font-size: 1.6rem; font-weight: 600; color: var(--ink); line-height: 1.5; }
+  .answer-block { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border); animation: rise 0.35s ease; }
+  .english-sentence { font-family: 'Lora', serif; font-size: 1.35rem; font-style: italic; color: var(--green); line-height: 1.5; }
+  .new-words-block { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .new-words-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .new-word-chip { background: rgba(232,160,32,0.1); border: 1px solid rgba(232,160,32,0.2); border-radius: 8px; padding: 3px 10px; font-size: 0.78rem; color: var(--accent); font-weight: 500; }
+  .new-word-chip span { color: var(--muted); font-style: italic; }
+
+  .english-prompt { font-family: 'Lora', serif; font-size: 1.15rem; font-style: italic; color: var(--muted); line-height: 1.5; margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+
+  .gap-sentence {
+    font-family: 'Lora', serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 2.4;
+    word-spacing: 2px;
+  }
+
+  select.gap-select {
+    font-family: 'Lora', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    background: rgba(232,160,32,0.1);
+    border: 1.5px solid rgba(232,160,32,0.4);
+    border-radius: 8px;
+    color: var(--accent);
+    padding: 2px 6px;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s;
+    vertical-align: middle;
+    max-width: 160px;
+  }
+
+  select.gap-select:focus { border-color: var(--accent); background: rgba(232,160,32,0.15); }
+  select.gap-select option { background: #1a2a3a; color: var(--ink); }
+  select.gap-select.correct { background: rgba(77,184,122,0.15); border-color: var(--green); color: var(--green); }
+  select.gap-select.wrong { background: rgba(248,113,113,0.15); border-color: var(--red); color: var(--red); }
+
+  .gap-correct-label {
+    display: inline-block;
+    font-family: 'Lora', serif;
+    font-size: 0.8rem;
+    color: var(--green);
+    background: rgba(77,184,122,0.1);
+    border: 1px solid rgba(77,184,122,0.3);
+    border-radius: 6px;
+    padding: 1px 7px;
+    margin-left: 3px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .gap-feedback { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); animation: rise 0.3s ease; font-size: 0.9rem; line-height: 1.6; color: var(--muted); }
+  .gap-feedback .correct-line { font-family: 'Lora', serif; font-size: 1.05rem; font-style: italic; color: var(--green); margin-top: 8px; }
+
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .btn-row { display: flex; gap: 10px; width: 100%; max-width: 680px; flex-wrap: wrap; }
+  .btn { flex: 1; padding: 13px 18px; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.18s; border: none; min-width: 110px; }
+  .btn-reveal { background: var(--accent); color: #0f1923; box-shadow: 0 4px 20px rgba(232,160,32,0.3); }
+  .btn-reveal:hover { background: #f0b030; transform: translateY(-1px); }
+  .btn-check { background: var(--accent); color: #0f1923; box-shadow: 0 4px 20px rgba(232,160,32,0.3); }
+  .btn-check:hover { background: #f0b030; transform: translateY(-1px); }
+  .btn-next { background: rgba(255,255,255,0.06); color: var(--ink); border: 1px solid var(--border); }
+  .btn-next:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
+  .btn-shuffle { background: transparent; color: var(--green); border: 1px solid rgba(77,184,122,0.25); flex: 0 0 auto; }
+  .btn-shuffle:hover { background: rgba(77,184,122,0.08); }
+  .btn-tryagain { background: transparent; color: var(--yellow); border: 1px solid rgba(250,204,21,0.25); }
+  .btn-tryagain:hover { background: rgba(250,204,21,0.08); }
+  .hidden { display: none !important; }
+
+  .ref-toggle { margin-top: 28px; font-size: 0.82rem; color: var(--accent); cursor: pointer; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-align: center; opacity: 0.8; }
+  .ref-table { max-width: 680px; width: 100%; margin-top: 14px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--card); font-size: 0.85rem; }
+  .ref-table table { width: 100%; border-collapse: collapse; }
+  .ref-table th { background: rgba(255,255,255,0.04); padding: 10px 14px; text-align: left; font-size: 0.68rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .ref-table td { padding: 9px 14px; border-top: 1px solid var(--border); color: var(--ink); }
+  .ref-table td:first-child { font-family: 'Lora', serif; font-size: 0.95rem; font-weight: 600; color: var(--accent); }
+  .ref-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .done-screen { text-align: center; padding: 30px 20px; }
+  .done-screen h2 { font-family: 'Lora', serif; font-size: 2rem; margin-bottom: 10px; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Spanish <em>Drill</em></h1>
+  <p>20 sentences — two ways to practise</p>
+</header>
+
+<div class="mode-toggle">
+  <button class="mode-btn active" id="btn-read" onclick="switchMode('read')">📖 Read &amp; Translate</button>
+  <button class="mode-btn" id="btn-gap" onclick="switchMode('gap')">🧩 Gap Fill</button>
+</div>
+<div class="mode-hint" id="mode-hint">Spanish shown → think → Spacebar to reveal</div>
+
+<div class="topbar">
+  <div>Sentence <strong id="cur">1</strong> of <strong id="total">20</strong></div>
+  <div id="topbar-right">Seen: <strong id="s-seen">0</strong> &nbsp;|&nbsp; Remaining: <strong id="s-left">20</strong></div>
+</div>
+
+<div class="prog-wrap"><div class="prog-bar" id="prog" style="width:0%"></div></div>
+
+<div class="score-row hidden" id="score-row">
+  <div class="score-pill pill-green">✅ Perfect: <span id="sc-perfect">0</span></div>
+  <div class="score-pill pill-yellow">🟡 With hints: <span id="sc-hint">0</span></div>
+</div>
+
+<div class="card-wrap">
+  <div class="card" id="card">
+    <div class="sentence-num" id="sent-num">#1</div>
+
+    <div id="read-content">
+      <div class="section-label label-es">🇪🇸 Spanish</div>
+      <div class="spanish-sentence" id="spanish">—</div>
+      <div class="answer-block hidden" id="answer-block">
+        <div class="section-label label-en">🇬🇧 English</div>
+        <div class="english-sentence" id="english">—</div>
+        <div class="new-words-block" id="new-words-block"></div>
+      </div>
+    </div>
+
+    <div id="gap-content" class="hidden">
+      <div class="section-label label-muted">🇬🇧 English</div>
+      <div class="english-prompt" id="gap-english">—</div>
+      <div class="section-label label-es">🇪🇸 Complete the Spanish</div>
+      <div class="gap-sentence" id="gap-sentence"></div>
+      <div class="gap-feedback hidden" id="gap-feedback"></div>
+    </div>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="btn btn-reveal" id="revealBtn" onclick="reveal()">👁 Reveal</button>
+  <button class="btn btn-check hidden" id="checkBtn" onclick="checkGaps()">✓ Check answers</button>
+  <button class="btn btn-tryagain hidden" id="tryAgainBtn" onclick="tryAgain()">↩ Try again</button>
+  <button class="btn btn-next hidden" id="nextBtn" onclick="next()">→ Next</button>
+  <button class="btn btn-shuffle" onclick="reshuffle()">⟳ Shuffle</button>
+</div>
+
+<div class="ref-toggle" onclick="toggleRef()">📋 Show / hide vocabulary list</div>
+<div class="ref-table hidden" id="ref-table">
+  <table>
+    <thead><tr><th>Spanish</th><th>English</th></tr></thead>
+    <tbody id="ref-body"></tbody>
+  </table>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// SENTENCE DATA
+// gaps: { word, distractors }
+// "word" = exact space-separated token in the Spanish sentence
+// First unused occurrence of that token becomes the gap
+// ─────────────────────────────────────────────────────────────
+const sentences = [
+  {
+    // ser vs estar: "es" (permanent quality) not "está" (temporary state)
+    // muy vs mucho: "muy grande" not "mucho grande"
+    es: "La cama es muy grande y cómoda.",
+    en: "The bed is very big and comfortable.",
+    new: [["muy","very"], ["cómoda","comfortable"]],
+    gaps: [
+      { word: "La",      distractors: ["El", "Una", "Los"] },
+      { word: "es",      distractors: ["está", "son", "está"] },   // ser vs estar
+      { word: "muy",     distractors: ["mucho", "mucha", "bien"] }, // muy vs mucho
+      { word: "cómoda.", distractors: ["cómodo.", "cómodas.", "bonita."] }
+    ]
+  },
+  {
+    // por vs para: "en" for location on/at; ir vs venir: Quiero (I want, towards) vs Vengo
+    es: "Quiero beber una cerveza fría en la playa.",
+    en: "I want to drink a cold beer on the beach.",
+    new: [["fría","cold (for things)"]],
+    gaps: [
+      { word: "Quiero",  distractors: ["Quiere", "Vengo", "Traigo"] }, // ir/venir flavour
+      { word: "una",     distractors: ["un", "unas", "la"] },
+      { word: "fría",    distractors: ["frío", "caliente", "buena"] },
+      { word: "en",      distractors: ["para", "por", "a"] }           // por vs para vs en
+    ]
+  },
+  {
+    // mucho vs muy: "mucho ruido" (noun) not "muy ruido"
+    // por vs para: "por la noche" (during) not "para la noche"
+    es: "El vecino hace mucho ruido por la noche.",
+    en: "The neighbour makes a lot of noise at night.",
+    new: [["por la noche","at night"]],
+    gaps: [
+      { word: "El",    distractors: ["La", "Los", "Un"] },
+      { word: "hace",  distractors: ["hacen", "haces", "hay"] },
+      { word: "mucho", distractors: ["muy", "mucha", "poco"] },   // mucho vs muy
+      { word: "por",   distractors: ["para", "en", "a"] }         // por vs para
+    ]
+  },
+  {
+    // ser vs estar: "está cerrada" (state) not "es cerrada"
+    // saber vs conocer: Necesito (need) vs Sé / Conozco — distractor added
+    es: "Necesito la llave porque la ventana está cerrada.",
+    en: "I need the key because the window is closed.",
+    new: [["porque","because"], ["cerrada","closed"]],
+    gaps: [
+      { word: "Necesito",  distractors: ["Conozco", "Sé", "Quiero"] },  // saber/conocer contrast
+      { word: "porque",    distractors: ["pero", "para", "cuando"] },
+      { word: "está",      distractors: ["es", "son", "están"] },        // ser vs estar
+      { word: "cerrada.",  distractors: ["cerrado.", "abierta.", "pequeña."] }
+    ]
+  },
+  {
+    // ser vs estar: "es simpático" (permanent character) not "está simpático"
+    // también vs tampoco introduced as distractor for "pero"
+    es: "El médico es simpático pero su cocina es pequeña.",
+    en: "The doctor is friendly but his kitchen is small.",
+    new: [["su","his / her / their"]],
+    gaps: [
+      { word: "médico",    distractors: ["vecino", "billete", "mercado"] },
+      { word: "es",        distractors: ["está", "son", "hay"] },         // ser vs estar
+      { word: "pero",      distractors: ["también", "tampoco", "porque"] }, // también/tampoco
+      { word: "su",        distractors: ["mi", "tu", "la"] },
+      { word: "pequeña.",  distractors: ["pequeño.", "grande.", "bonita."] }
+    ]
+  },
+  {
+    // ir vs venir: "Voy" (I go, away from here) not "Vengo" (I come, towards here)
+    // por vs para: "para comprar" (purpose) not "por comprar"
+    es: "Voy al mercado porque necesito comprar comida nueva.",
+    en: "I am going to the market because I need to buy new food.",
+    new: [["al","to the (el → al)"]],
+    gaps: [
+      { word: "Voy",    distractors: ["Vengo", "Vamos", "Van"] },    // ir vs venir
+      { word: "al",     distractors: ["a", "del", "en"] },
+      { word: "porque", distractors: ["para", "pero", "cuando"] },   // por vs para
+      { word: "comida", distractors: ["bebida", "ropa", "llave"] },
+      { word: "nueva.", distractors: ["nuevo.", "nuevas.", "vieja."] }
+    ]
+  },
+  {
+    // ser vs estar: "es lenta" (quality) not "está lenta"
+    // también vs tampoco: "y" (and/also) vs "también" (also) vs "tampoco" (neither)
+    es: "La música es lenta y bonita esta noche.",
+    en: "The music is slow and pretty tonight.",
+    new: [["esta noche","tonight"]],
+    gaps: [
+      { word: "música",  distractors: ["risa", "basura", "farmacia"] },
+      { word: "es",      distractors: ["está", "son", "hay"] },           // ser vs estar
+      { word: "y",       distractors: ["también", "tampoco", "pero"] },   // también vs tampoco
+      { word: "esta",    distractors: ["este", "ese", "la"] }
+    ]
+  },
+  {
+    // mucho vs muy: "muy extraño" (adverb + adj) not "mucho extraño"
+    // saber vs conocer: "tengo" vs "sé" / "conozco" — for knowing things
+    es: "No puedo dormir porque tengo un sueño muy extraño.",
+    en: "I can't sleep because I have a very strange dream.",
+    new: [["dormir","to sleep"], ["extraño","strange / odd"]],
+    gaps: [
+      { word: "puedo",    distractors: ["puede", "puedes", "podemos"] },
+      { word: "dormir",   distractors: ["saber", "conocer", "caminar"] }, // saber/conocer contrast
+      { word: "porque",   distractors: ["para", "pero", "cuando"] },      // por/para
+      { word: "muy",      distractors: ["mucho", "mucha", "bien"] },      // muy vs mucho
+      { word: "extraño.", distractors: ["extraña.", "normal.", "bonito."] }
+    ]
+  },
+  {
+    // ir vs venir: "ir" (to go away) not "venir" (to come here)
+    // por vs para: "sin" vs "con" vs "para"
+    es: "El billete es importante — no puedo ir sin él.",
+    en: "The ticket is important — I can't go without it.",
+    new: [["sin","without"], ["sin él","without it / him"]],
+    gaps: [
+      { word: "billete",    distractors: ["médico", "mercado", "parque"] },
+      { word: "es",         distractors: ["está", "son", "hay"] },        // ser vs estar
+      { word: "ir",         distractors: ["venir", "voy", "traer"] },     // ir vs venir
+      { word: "sin",        distractors: ["con", "para", "por"] }         // por vs para vs sin
+    ]
+  },
+  {
+    // ser vs estar: "está cerca" (location = estar) not "es cerca"
+    // por vs para: "de" in "cerca de" — not "para" or "por"
+    es: "La farmacia está cerca de la esquina.",
+    en: "The pharmacy is near the corner.",
+    new: [["cerca de","near / close to"]],
+    gaps: [
+      { word: "farmacia", distractors: ["música", "basura", "cocina"] },
+      { word: "está",     distractors: ["es", "son", "hay"] },    // ser vs estar: location
+      { word: "cerca",    distractors: ["lejos", "dentro", "encima"] },
+      { word: "de",       distractors: ["para", "por", "en"] }    // por vs para
+    ]
+  },
+  {
+    // ir vs venir: "vivir" near place — "Quiero" (want to go/live there)
+    // ser vs estar: "es bonito" (quality of sun) not "está bonito"
+    es: "Quiero vivir cerca de la playa porque el sol es bonito.",
+    en: "I want to live near the beach because the sun is beautiful.",
+    new: [],
+    gaps: [
+      { word: "vivir",   distractors: ["venir", "traer", "comprar"] },  // ir/venir/llevar/traer
+      { word: "cerca",   distractors: ["lejos", "dentro", "fuera"] },
+      { word: "porque",  distractors: ["para", "pero", "cuando"] },     // por vs para
+      { word: "es",      distractors: ["está", "son", "hay"] },          // ser vs estar
+      { word: "bonito.", distractors: ["bonita.", "lento.", "nuevo."] }
+    ]
+  },
+  {
+    // ser vs estar: "es fácil" (quality) not "está fácil"
+    // saber vs conocer: "como" (I eat) vs "sé" (I know how) — subtle
+    es: "El desayuno es fácil — bebo café y como pan.",
+    en: "Breakfast is easy — I drink coffee and eat bread.",
+    new: [["café","coffee"], ["pan","bread"]],
+    gaps: [
+      { word: "desayuno", distractors: ["almuerzo", "mercado", "billete"] },
+      { word: "es",       distractors: ["está", "son", "hay"] },          // ser vs estar
+      { word: "bebo",     distractors: ["traigo", "llevo", "tengo"] },    // llevar vs traer
+      { word: "café",     distractors: ["agua", "leche", "pan"] },
+      { word: "pan.",     distractors: ["café.", "agua.", "comida."] }
+    ]
+  },
+  {
+    // saber vs conocer: knowing a memory/fact = saber; knowing a person/place = conocer
+    // también vs tampoco: "con" (with) not "también" (also)
+    es: "Tengo un recuerdo viejo de la montaña con mi familia.",
+    en: "I have an old memory of the mountain with my family.",
+    new: [["mi","my"]],
+    gaps: [
+      { word: "Tengo",    distractors: ["Sé", "Conozco", "Tenemos"] },  // saber vs conocer
+      { word: "recuerdo", distractors: ["sueño", "billete", "ruido"] },
+      { word: "viejo",    distractors: ["vieja", "viejos", "nuevo"] },
+      { word: "con",      distractors: ["también", "tampoco", "sin"] },  // también/tampoco
+      { word: "mi",       distractors: ["su", "tu", "la"] }
+    ]
+  },
+  {
+    // ir vs venir: "voy a caminar" (going to do = ir a + inf) not "vengo a"
+    // ser vs estar: "es lento" (quality) vs "está lento" (temporary state) — both possible but habit here
+    es: "El autobús es lento hoy — voy a caminar.",
+    en: "The bus is slow today — I am going to walk.",
+    new: [["caminar","to walk"]],
+    gaps: [
+      { word: "autobús",  distractors: ["billete", "mercado", "parque"] },
+      { word: "es",       distractors: ["está", "son", "va"] },           // ser vs estar
+      { word: "voy",      distractors: ["vengo", "vamos", "van"] },       // ir vs venir
+      { word: "caminar.", distractors: ["llevar.", "traer.", "dormir."] }  // llevar vs traer
+    ]
+  },
+  {
+    // llevar vs traer: "llevarla" (take away from here) not "traerla" (bring here)
+    // ser vs estar: "está cerca" (location)
+    es: "La basura está cerca de la puerta — ¿puedes llevarla?",
+    en: "The rubbish is near the door — can you take it?",
+    new: [["la puerta","the door"], ["llevar","to carry / take"]],
+    gaps: [
+      { word: "basura",    distractors: ["música", "farmacia", "risa"] },
+      { word: "está",      distractors: ["es", "son", "hay"] },            // ser vs estar
+      { word: "puerta",    distractors: ["ventana", "esquina", "cocina"] },
+      { word: "llevarla?", distractors: ["traerla?", "saberla?", "conocerla?"] } // llevar vs traer; saber vs conocer
+    ]
+  },
+  {
+    // pedir vs preguntar: "Pienso" (think/believe) vs "Pregunto" (I ask) vs "Pido" (I request)
+    // mucho vs muy: "muy interesante" not "mucho interesante"
+    es: "Pienso que el partido de fútbol es muy interesante.",
+    en: "I think that the football match is very interesting.",
+    new: [["que","that (joining two ideas)"]],
+    gaps: [
+      { word: "Pienso",       distractors: ["Pregunto", "Pido", "Creo"] },      // pedir vs preguntar
+      { word: "que",          distractors: ["pero", "para", "también"] },
+      { word: "es",           distractors: ["está", "son", "hay"] },             // ser vs estar
+      { word: "muy",          distractors: ["mucho", "mucha", "bien"] },         // muy vs mucho
+      { word: "interesante.", distractors: ["importante.", "fácil.", "aburrido."] }
+    ]
+  },
+  {
+    // ser vs estar: "está cerrado" (state) not "es cerrado"
+    // hay vs es/está: "hay un banco" (there is) not "es un banco"
+    // también vs tampoco: "pero" (but) — contrast with también/tampoco
+    es: "El banco está cerrado hoy, pero hay un banco bonito en el parque.",
+    en: "The bank is closed today, but there is a nice bench in the park.",
+    new: [["hay","there is / there are"], ["el parque","the park"]],
+    gaps: [
+      { word: "está",    distractors: ["es", "son", "hay"] },              // ser vs estar
+      { word: "cerrado", distractors: ["abierto", "cerrada", "pequeño"] },
+      { word: "pero",    distractors: ["también", "tampoco", "porque"] },  // también vs tampoco
+      { word: "hay",     distractors: ["es", "está", "tiene"] },           // hay vs es/está
+      { word: "bonito",  distractors: ["bonita", "bonitos", "feo"] }
+    ]
+  },
+  {
+    // pedir vs preguntar: "dice" (says/tells) vs "pregunta" (asks) vs "pide" (requests)
+    // ser vs estar: "es fácil" (quality)
+    es: "¡Buena suerte! — el médico dice que la operación es fácil.",
+    en: "Good luck! — the doctor says that the operation is easy.",
+    new: [["dice","says (from decir)"], ["la operación","the operation"]],
+    gaps: [
+      { word: "Buena",     distractors: ["Buen", "Bueno", "Buenos"] },
+      { word: "dice",      distractors: ["pregunta", "pide", "sabe"] },     // pedir vs preguntar
+      { word: "que",       distractors: ["pero", "para", "también"] },
+      { word: "es",        distractors: ["está", "son", "hay"] },            // ser vs estar
+      { word: "fácil.",    distractors: ["difícil.", "largo.", "nuevo."] }
+    ]
+  },
+  {
+    // ser vs estar: "es importante" / "es aburrida" (qualities)
+    // también vs tampoco: "sin" (without) vs "también" (also) vs "tampoco" (neither)
+    es: "La risa es importante — la vida sin risa es aburrida.",
+    en: "Laughter is important — life without laughter is boring.",
+    new: [["la vida","life"]],
+    gaps: [
+      { word: "es",         distractors: ["está", "son", "hay"] },             // ser vs estar (×1)
+      { word: "vida",       distractors: ["música", "risa", "cocina"] },
+      { word: "sin",        distractors: ["también", "tampoco", "con"] },      // también vs tampoco
+      { word: "aburrida.",  distractors: ["aburrido.", "bonita.", "difícil."] }
+    ]
+  },
+  {
+    // ser vs estar: "es bueno" (quality)
+    // mucho vs muy: "muy bueno" not "mucho bueno" — but here adjective after noun
+    // por vs para: "en el mercado" (location) not "para el mercado"
+    es: "El almuerzo en el mercado es bueno, rápido y barato.",
+    en: "Lunch at the market is good, fast and cheap.",
+    new: [["barato","cheap"]],
+    gaps: [
+      { word: "almuerzo", distractors: ["desayuno", "billete", "recuerdo"] },
+      { word: "en",       distractors: ["para", "por", "a"] },              // por vs para
+      { word: "es",       distractors: ["está", "son", "hay"] },             // ser vs estar
+      { word: "rápido",   distractors: ["rápida", "lento", "mucho"] },      // mucho intrusion
+      { word: "barato.",  distractors: ["caro.", "bonito.", "viejo."] }
+    ]
+  },
+];
+
+// ─────────────────────────────────────────────────────────────
+// VOCAB REFERENCE
+// ─────────────────────────────────────────────────────────────
+const allNewWords = [];
+const seenW = new Set();
+sentences.forEach(s => {
+  s.new.forEach(([es, en]) => {
+    if (!seenW.has(es)) { seenW.add(es); allNewWords.push([es, en]); }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+let mode = 'read';
+let deck = [];
+let idx = 0;
+let revealed = false;
+let gapChecked = false;
+let seenCount = 0;
+let scores = { perfect: 0, hint: 0 };
+
+// ─────────────────────────────────────────────────────────────
+// MODE SWITCH
+// ─────────────────────────────────────────────────────────────
+function switchMode(m) {
+  mode = m;
+  document.getElementById('btn-read').classList.toggle('active', m === 'read');
+  document.getElementById('btn-gap').classList.toggle('active', m === 'gap');
+  document.getElementById('mode-hint').textContent =
+    m === 'read'
+      ? 'Spanish shown → think → Spacebar to reveal'
+      : 'English shown → choose the missing words → Check';
+  document.getElementById('read-content').classList.toggle('hidden', m !== 'read');
+  document.getElementById('gap-content').classList.toggle('hidden', m !== 'gap');
+  document.getElementById('score-row').classList.toggle('hidden', m !== 'gap');
+  buildDeck();
+}
+
+// ─────────────────────────────────────────────────────────────
+// DECK
+// ─────────────────────────────────────────────────────────────
+function buildDeck() {
+  deck = [...Array(sentences.length).keys()].sort(() => Math.random() - 0.5);
+  idx = 0; revealed = false; gapChecked = false; seenCount = 0;
+  scores = { perfect: 0, hint: 0 };
+  updateScorePills();
+  document.getElementById('total').textContent = deck.length;
+  updateTopbar();
+  showCard();
+}
+
+function reshuffle() { buildDeck(); }
+
+// ─────────────────────────────────────────────────────────────
+// SHOW CARD
+// ─────────────────────────────────────────────────────────────
+function showCard() {
+  if (idx >= deck.length) { showDone(); return; }
+  const s = sentences[deck[idx]];
+  document.getElementById('sent-num').textContent = '#' + (idx + 1);
+  document.getElementById('cur').textContent = idx + 1;
+  document.getElementById('prog').style.width = (idx / deck.length * 100) + '%';
+  ['revealBtn','checkBtn','tryAgainBtn','nextBtn'].forEach(id =>
+    document.getElementById(id).classList.add('hidden'));
+  if (mode === 'read') {
+    document.getElementById('spanish').textContent = s.es;
+    document.getElementById('answer-block').classList.add('hidden');
+    document.getElementById('revealBtn').classList.remove('hidden');
+    revealed = false;
+  } else {
+    buildGapCard(s);
+    document.getElementById('checkBtn').classList.remove('hidden');
+    gapChecked = false;
+  }
+  updateTopbar();
+}
+
+// ─────────────────────────────────────────────────────────────
+// READ MODE
+// ─────────────────────────────────────────────────────────────
+function reveal() {
+  if (mode !== 'read') return;
+  const s = sentences[deck[idx]];
+  document.getElementById('english').textContent = s.en;
+  const nwb = document.getElementById('new-words-block');
+  if (s.new.length > 0) {
+    nwb.innerHTML = `<div class="section-label label-es" style="margin-top:4px">🆕 New words</div>
+      <div class="new-words-list">${s.new.map(([es,en]) =>
+        `<div class="new-word-chip">${es} <span>= ${en}</span></div>`
+      ).join('')}</div>`;
+  } else {
+    nwb.innerHTML = `<div style="margin-top:10px;font-size:0.8rem;color:var(--muted);opacity:0.5">No new words — all familiar ✓</div>`;
+  }
+  document.getElementById('answer-block').classList.remove('hidden');
+  document.getElementById('revealBtn').classList.add('hidden');
+  document.getElementById('nextBtn').classList.remove('hidden');
+  if (!revealed) { seenCount++; revealed = true; updateTopbar(); }
+}
+
+// ─────────────────────────────────────────────────────────────
+// GAP FILL — build
+// Matches gaps by word token; handles duplicates (e.g. "banco...banco")
+// by consuming each gap definition only once in order
+// ─────────────────────────────────────────────────────────────
+function buildGapCard(s) {
+  document.getElementById('gap-english').textContent = s.en;
+  document.getElementById('gap-feedback').classList.add('hidden');
+  const container = document.getElementById('gap-sentence');
+  container.innerHTML = '';
+  scores._hintCounted = false;
+
+  const tokens = s.es.split(' ');
+
+  // Build ordered queue of gaps per token
+  const gapQueue = {};
+  s.gaps.forEach(g => {
+    if (!gapQueue[g.word]) gapQueue[g.word] = [];
+    gapQueue[g.word].push(g.distractors);
+  });
+  // Track how many we've consumed per token
+  const gapUsed = {};
+
+  tokens.forEach((token, ti) => {
+    if (ti > 0) container.appendChild(document.createTextNode(' '));
+
+    const queue = gapQueue[token];
+    const usedCount = gapUsed[token] || 0;
+
+    if (queue && usedCount < queue.length) {
+      // This token is a gap
+      gapUsed[token] = usedCount + 1;
+      const distractors = queue[usedCount];
+      const options = [token, ...distractors].sort(() => Math.random() - 0.5);
+
+      const sel = document.createElement('select');
+      sel.className = 'gap-select';
+      sel.dataset.correct = token;
+
+      const blank = document.createElement('option');
+      blank.value = '';
+      blank.textContent = '___';
+      sel.appendChild(blank);
+
+      options.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt;
+        o.textContent = opt;
+        sel.appendChild(o);
+      });
+
+      container.appendChild(sel);
+    } else {
+      const span = document.createElement('span');
+      span.textContent = token;
+      container.appendChild(span);
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// GAP FILL — check
+// ─────────────────────────────────────────────────────────────
+function checkGaps() {
+  if (gapChecked) return;
+  gapChecked = true;
+
+  const selects = document.querySelectorAll('#gap-sentence select.gap-select');
+  let allCorrect = true;
+
+  selects.forEach(sel => {
+    const correct = sel.dataset.correct;
+    if (sel.value === correct) {
+      sel.disabled = true;
+      sel.classList.remove('wrong');
+      sel.classList.add('correct');
+    } else {
+      allCorrect = false;
+      sel.classList.remove('correct');
+      sel.classList.add('wrong');
+    }
+  });
+
+  const s = sentences[deck[idx]];
+  const fb = document.getElementById('gap-feedback');
+
+  if (allCorrect) {
+    fb.innerHTML = `<span style="color:var(--green)">🎉 Perfect — every gap correct!</span>`;
+    scores.perfect++;
+    fb.classList.remove('hidden');
+    updateScorePills();
+    document.getElementById('checkBtn').classList.add('hidden');
+    document.getElementById('tryAgainBtn').classList.add('hidden');
+    document.getElementById('nextBtn').classList.remove('hidden');
+  } else {
+    fb.innerHTML = `<span style="color:var(--red)">Not quite — change the red ones and check again, or try the whole sentence again.</span>`;
+    if (!scores._hintCounted) { scores.hint++; scores._hintCounted = true; }
+    fb.classList.remove('hidden');
+    updateScorePills();
+    document.getElementById('checkBtn').classList.remove('hidden'); // stays visible
+    document.getElementById('tryAgainBtn').classList.remove('hidden');
+    document.getElementById('nextBtn').classList.add('hidden');
+  }
+  gapChecked = false; // allow re-checking
+}
+
+// ─────────────────────────────────────────────────────────────
+// TRY AGAIN
+// ─────────────────────────────────────────────────────────────
+function tryAgain() {
+  buildGapCard(sentences[deck[idx]]);
+  document.getElementById('gap-feedback').classList.add('hidden');
+  document.getElementById('checkBtn').classList.remove('hidden');
+  document.getElementById('tryAgainBtn').classList.add('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  gapChecked = false;
+}
+
+// ─────────────────────────────────────────────────────────────
+// SHARED
+// ─────────────────────────────────────────────────────────────
+function next() { idx++; showCard(); }
+
+function updateTopbar() {
+  const left = Math.max(0, deck.length - idx);
+  if (mode === 'read') {
+    document.getElementById('topbar-right').innerHTML =
+      `Seen: <strong>${seenCount}</strong> &nbsp;|&nbsp; Remaining: <strong>${left}</strong>`;
+  } else {
+    document.getElementById('topbar-right').innerHTML =
+      `Remaining: <strong>${left}</strong>`;
+  }
+}
+
+function updateScorePills() {
+  document.getElementById('sc-perfect').textContent = scores.perfect;
+  document.getElementById('sc-hint').textContent = scores.hint;
+}
+
+function showDone() {
+  if (mode === 'read') {
+    document.getElementById('card').innerHTML = `
+      <div class="done-screen">
+        <div style="font-size:2.6rem;margin-bottom:12px">🎉</div>
+        <h2>¡Perfecto!</h2>
+        <p style="color:var(--muted);font-size:0.95rem;">All 20 sentences done!<br>Click Shuffle to go again.</p>
+      </div>`;
+  } else {
+    document.getElementById('card').innerHTML = `
+      <div class="done-screen">
+        <div style="font-size:2.4rem;margin-bottom:12px">🎉</div>
+        <h2>¡Terminado!</h2>
+        <p style="color:var(--muted);font-size:0.95rem;margin-bottom:16px">All 20 sentences complete!</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <div class="score-pill pill-green">✅ Perfect: ${scores.perfect}</div>
+          <div class="score-pill pill-yellow">🟡 With hints: ${scores.hint}</div>
+        </div>
+        <p style="color:var(--muted);font-size:0.85rem;margin-top:14px">Click Shuffle to go again!</p>
+      </div>`;
+  }
+  ['revealBtn','checkBtn','tryAgainBtn','nextBtn'].forEach(id =>
+    document.getElementById(id).classList.add('hidden'));
+  document.getElementById('prog').style.width = '100%';
+}
+
+function toggleRef() {
+  document.getElementById('ref-table').classList.toggle('hidden');
+}
+
+allNewWords.forEach(([es, en]) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${es}</td><td>${en}</td>`;
+  document.getElementById('ref-body').appendChild(tr);
+});
+
+document.addEventListener('keydown', function(e) {
+  if (mode === 'read' && (e.code === 'Space' || e.key === ' ')) {
+    e.preventDefault();
+    if (!revealed) reveal(); else next();
+  }
+});
+
+buildDeck();
+</script>
+</body>
+</html>
