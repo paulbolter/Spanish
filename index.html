@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Paul's Spanish Resources</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --red:    #c0392b;
+      --yellow: #f1c40f;
+      --dark:   #1a1a2e;
+      --mid:    #2d2d44;
+      --card:   #252538;
+      --text:   #e8e8f0;
+      --muted:  #9090b0;
+      --accent: #e74c3c;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative;
+      padding: 3.5rem 2rem 2.5rem;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 38px,
+          rgba(192,57,43,0.08) 38px,
+          rgba(192,57,43,0.08) 40px
+        );
+      pointer-events: none;
+    }
+
+    .flag-stripe {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, var(--red) 33%, var(--yellow) 33%, var(--yellow) 67%, var(--red) 67%);
+    }
+
+    .header-emoji {
+      font-size: 3.5rem;
+      line-height: 1;
+      margin-bottom: 0.6rem;
+      display: block;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      color: #fff;
+    }
+
+    h1 span {
+      color: var(--yellow);
+    }
+
+    .subtitle {
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      padding: 1.5rem 1.5rem 0.5rem;
+    }
+
+    .filter-btn {
+      background: var(--mid);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--muted);
+      padding: 0.35rem 1rem;
+      border-radius: 999px;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+      background: var(--red);
+      border-color: var(--red);
+      color: #fff;
+    }
+
+    /* ── MAIN GRID ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .status {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 1rem 0 2rem;
+      min-height: 2.5rem;
+    }
+
+    .status.error { color: var(--accent); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 1.4rem 1.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      animation: fadeUp 0.4s ease both;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--red), var(--yellow));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+      border-color: rgba(192,57,43,0.4);
+    }
+
+    .card:hover::after { transform: scaleX(1); }
+
+    .card-tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      background: rgba(192,57,43,0.2);
+      color: #e87070;
+      align-self: flex-start;
+    }
+
+    .card-tag.vocab   { background: rgba(52,152,219,0.2); color: #7ec8e3; }
+    .card-tag.grammar { background: rgba(46,204,113,0.2); color: #7ee8a2; }
+    .card-tag.quiz    { background: rgba(241,196,15,0.2); color: #f5d76e; }
+    .card-tag.game    { background: rgba(155,89,182,0.2); color: #c59ade; }
+
+    .card-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.3;
+    }
+
+    .card-meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .card-arrow {
+      margin-left: auto;
+      font-size: 1.1rem;
+      opacity: 0.4;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .card:hover .card-arrow { opacity: 1; transform: translateX(3px); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+    }
+
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty p { font-size: 0.95rem; line-height: 1.8; }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    footer a { color: var(--muted); text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="flag-stripe"></div>
+  <span class="header-emoji">🇪🇸</span>
+  <h1>Paul's <span>Spanish</span> Resources</h1>
+  <p class="subtitle">Interactive tools &amp; activities</p>
+</header>
+
+<div class="filter-bar" id="filterBar">
+  <button class="filter-btn active" data-filter="all">All</button>
+</div>
+
+<main>
+  <div class="status" id="status">Loading resources…</div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>
+  Auto-built from <a href="https://github.com/paulbolter/Spanish" target="_blank">github.com/paulbolter/Spanish</a>
+  · Updated every visit
+</footer>
+
+<script>
+  const REPO  = 'paulbolter/Spanish';
+  const PAGES = `https://paulbolter.github.io/Spanish/`;
+  const API   = `https://api.github.com/repos/${REPO}/contents/`;
+
+  // ── Tag detection ─────────────────────────────────────────────────────────
+  function detectTag(name) {
+    const n = name.toLowerCase();
+    if (/vocab|word|palabra/.test(n))   return 'vocab';
+    if (/grammar|gram|tense|verb/.test(n)) return 'grammar';
+    if (/quiz|test|practice/.test(n))   return 'quiz';
+    if (/game|juego|match/.test(n))     return 'game';
+    return 'activity';
+  }
+
+  function tagLabel(tag) {
+    return { vocab:'Vocab', grammar:'Grammar', quiz:'Quiz', game:'Game', activity:'Activity' }[tag] || tag;
+  }
+
+  // ── Pretty name from filename ─────────────────────────────────────────────
+  function prettify(filename) {
+    return filename
+      .replace(/\.html$/i, '')
+      .replace(/[-_]/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  // ── Build card ────────────────────────────────────────────────────────────
+  function makeCard(file, delay) {
+    const tag  = detectTag(file.name);
+    const name = prettify(file.name);
+    const url  = `${PAGES}${file.name}`;
+
+    const a = document.createElement('a');
+    a.className  = 'card';
+    a.href       = url;
+    a.target     = '_blank';
+    a.rel        = 'noopener';
+    a.dataset.tag = tag;
+    a.style.animationDelay = `${delay * 60}ms`;
+
+    a.innerHTML = `
+      <span class="card-tag ${tag}">${tagLabel(tag)}</span>
+      <span class="card-name">${name}</span>
+      <span class="card-meta">
+        <span>📄 HTML</span>
+        <span class="card-arrow">→</span>
+      </span>`;
+    return a;
+  }
+
+  // ── Filter logic ──────────────────────────────────────────────────────────
+  let allCards = [];
+
+  function buildFilters(tags) {
+    const bar = document.getElementById('filterBar');
+    [...new Set(tags)].sort().forEach(tag => {
+      if (tag === 'all') return;
+      const btn = document.createElement('button');
+      btn.className   = 'filter-btn';
+      btn.dataset.filter = tag;
+      btn.textContent = tagLabel(tag);
+      bar.appendChild(btn);
+    });
+
+    bar.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      bar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const f = btn.dataset.filter;
+      allCards.forEach(c => {
+        c.style.display = (f === 'all' || c.dataset.tag === f) ? '' : 'none';
+      });
+    });
+  }
+
+  // ── Fetch & render ────────────────────────────────────────────────────────
+  async function load() {
+    const statusEl = document.getElementById('status');
+    const grid     = document.getElementById('grid');
+
+    try {
+      const res  = await fetch(API);
+      if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
+      const files = await res.json();
+
+      const htmlFiles = files.filter(f =>
+        f.type === 'file' &&
+        f.name.toLowerCase().endsWith('.html') &&
+        f.name.toLowerCase() !== 'index.html'
+      );
+
+      if (htmlFiles.length === 0) {
+        statusEl.textContent = '';
+        grid.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">📂</div>
+            <p>No HTML files yet — add your first activity<br>and this page will display it automatically!</p>
+          </div>`;
+        return;
+      }
+
+      statusEl.textContent = `${htmlFiles.length} resource${htmlFiles.length !== 1 ? 's' : ''} found`;
+
+      const tags = htmlFiles.map(f => detectTag(f.name));
+      buildFilters(tags);
+
+      htmlFiles.forEach((file, i) => {
+        const card = makeCard(file, i);
+        allCards.push(card);
+        grid.appendChild(card);
+      });
+
+    } catch (err) {
+      statusEl.textContent  = `⚠️ Could not load files: ${err.message}`;
+      statusEl.className    = 'status error';
+      console.error(err);
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>
