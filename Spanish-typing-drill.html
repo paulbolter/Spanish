@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spanish Typing Drill</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1f2d;
+    --card: #132233;
+    --ink: #e8e4d8;
+    --muted: #6a7f8f;
+    --accent: #38bdf8;
+    --green: #4ade80;
+    --yellow: #facc15;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --border: rgba(255,255,255,0.07);
+    --shadow: rgba(0,0,0,0.45);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px 60px;
+    background-image:
+      radial-gradient(ellipse at 15% 10%, rgba(56,189,248,0.06) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 90%, rgba(74,222,128,0.05) 0%, transparent 55%);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  header h1 {
+    font-family: 'Lora', serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+  }
+
+  header h1 em { font-style: italic; color: var(--accent); }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.88rem;
+    margin-top: 6px;
+  }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 660px;
+    margin: 20px 0 10px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .prog-wrap {
+    width: 100%;
+    max-width: 660px;
+    height: 3px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .prog-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+
+  /* Score pills */
+  .score-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .score-pill {
+    padding: 5px 14px;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .pill-green { background: rgba(74,222,128,0.12); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+  .pill-yellow { background: rgba(250,204,21,0.12); color: var(--yellow); border: 1px solid rgba(250,204,21,0.2); }
+  .pill-red { background: rgba(248,113,113,0.12); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+
+  /* Card */
+  .card-wrap {
+    width: 100%;
+    max-width: 660px;
+    margin-bottom: 16px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 40px 32px;
+    position: relative;
+    box-shadow: 0 12px 50px var(--shadow);
+  }
+
+  .sent-counter {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    font-size: 0.74rem;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .prompt-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+
+  .english-prompt {
+    font-family: 'Lora', serif;
+    font-size: 1.55rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.5;
+    margin-bottom: 26px;
+  }
+
+  /* Input area */
+  .input-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  #answer-input {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-family: 'Lora', serif;
+    font-size: 1.1rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  #answer-input:focus {
+    border-color: var(--accent);
+  }
+
+  #answer-input::placeholder { color: var(--muted); font-style: italic; }
+
+  .btn-check {
+    background: var(--accent);
+    color: #0d1f2d;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 22px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+
+  .btn-check:hover { background: #7dd3fc; transform: translateY(-1px); }
+
+  /* Feedback area */
+  .feedback-block {
+    margin-top: 24px;
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
+    animation: rise 0.3s ease;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .feedback-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  /* Word-by-word feedback */
+  .word-feedback {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .word-chip {
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-family: 'Lora', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .word-chip .typed {
+    font-size: 0.7rem;
+    font-style: italic;
+    opacity: 0.7;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+  }
+
+  .chip-green  { background: rgba(74,222,128,0.15);  color: var(--green);  border: 1px solid rgba(74,222,128,0.25); }
+  .chip-yellow { background: rgba(250,204,21,0.15);  color: var(--yellow); border: 1px solid rgba(250,204,21,0.25); }
+  .chip-red    { background: rgba(248,113,113,0.15); color: var(--red);    border: 1px solid rgba(248,113,113,0.25); }
+  .chip-blue   { background: rgba(96,165,250,0.15);  color: var(--blue);   border: 1px solid rgba(96,165,250,0.25); }
+  .chip-missing { background: rgba(248,113,113,0.08); color: var(--red); border: 1px dashed rgba(248,113,113,0.3); font-style: italic; }
+
+  .result-summary {
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  .correct-answer {
+    font-family: 'Lora', serif;
+    font-size: 1.05rem;
+    font-style: italic;
+    color: var(--green);
+    opacity: 0.85;
+    margin-top: 6px;
+  }
+
+  /* Next button */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 660px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 13px 18px;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    border: none;
+    min-width: 110px;
+  }
+
+  .btn-next {
+    background: rgba(255,255,255,0.06);
+    color: var(--ink);
+    border: 1px solid var(--border);
+  }
+
+  .btn-next:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
+
+  .btn-shuffle {
+    background: transparent;
+    color: var(--green);
+    border: 1px solid rgba(74,222,128,0.2);
+    flex: 0 0 auto;
+  }
+
+  .btn-shuffle:hover { background: rgba(74,222,128,0.07); }
+
+  .btn-tryagain {
+    background: transparent;
+    color: var(--yellow);
+    border: 1px solid rgba(250,204,21,0.25);
+  }
+
+  .btn-tryagain:hover { background: rgba(250,204,21,0.08); }
+
+  .hidden { display: none !important; }
+
+  /* Ref table */
+  .ref-toggle {
+    margin-top: 28px;
+    font-size: 0.8rem;
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-align: center;
+    opacity: 0.7;
+  }
+
+  .ref-table {
+    max-width: 660px;
+    width: 100%;
+    margin-top: 12px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--card);
+    font-size: 0.84rem;
+  }
+
+  .ref-table table { width: 100%; border-collapse: collapse; }
+
+  .ref-table th {
+    background: rgba(255,255,255,0.03);
+    padding: 9px 14px;
+    text-align: left;
+    font-size: 0.67rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .ref-table td {
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+    color: var(--ink);
+  }
+
+  .ref-table td:first-child {
+    font-family: 'Lora', serif;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .ref-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .done-card {
+    text-align: center;
+    padding: 30px 20px;
+  }
+
+  .done-card h2 {
+    font-family: 'Lora', serif;
+    font-size: 1.8rem;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Typing <em>Drill</em></h1>
+  <p>Read the English — type the Spanish — press Enter or Check</p>
+</header>
+
+<div class="topbar">
+  <div>Sentence <strong id="cur">1</strong> of <strong id="total">20</strong></div>
+  <div>Remaining: <strong id="s-left">20</strong></div>
+</div>
+
+<div class="prog-wrap">
+  <div class="prog-bar" id="prog" style="width:0%"></div>
+</div>
+
+<div class="score-row">
+  <div class="score-pill pill-green">🟢 Perfect: <span id="sc-perfect">0</span></div>
+  <div class="score-pill pill-yellow">🟡 Close: <span id="sc-close">0</span></div>
+  <div class="score-pill pill-red">🔴 Missed: <span id="sc-miss">0</span></div>
+</div>
+
+<div class="card-wrap">
+  <div class="card" id="card">
+    <div class="sent-counter" id="sent-num">#1</div>
+    <div class="prompt-label">🇬🇧 Translate this into Spanish</div>
+    <div class="english-prompt" id="english-prompt">—</div>
+    <div class="input-label">🇪🇸 Your Spanish</div>
+    <div class="input-row">
+      <input type="text" id="answer-input" placeholder="Type your Spanish here..." autocomplete="off" autocorrect="off" spellcheck="false" />
+      <button class="btn-check" onclick="checkAnswer()">Check ✓</button>
+    </div>
+    <div class="feedback-block hidden" id="feedback-block">
+      <div class="feedback-label">Word by word feedback</div>
+      <div class="word-feedback" id="word-feedback"></div>
+      <div class="result-summary" id="result-summary"></div>
+      <div class="correct-answer" id="correct-answer"></div>
+    </div>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="btn btn-next hidden" id="nextBtn" onclick="next()">→ Next sentence</button>
+  <button class="btn btn-tryagain hidden" id="tryAgainBtn" onclick="tryAgain()">↩ Try again</button>
+  <button class="btn btn-shuffle" onclick="reshuffle()">⟳ Shuffle</button>
+</div>
+
+<div class="ref-toggle" onclick="toggleRef()">📋 Show / hide new vocabulary reference</div>
+<div class="ref-table hidden" id="ref-table">
+  <table>
+    <thead><tr><th>Spanish</th><th>English</th></tr></thead>
+    <tbody id="ref-body"></tbody>
+  </table>
+</div>
+
+<script>
+// Each sentence: English prompt, array of accepted Spanish answers (first is canonical)
+const sentences = [
+  {
+    en: "The bed is very big and comfortable.",
+    answers: ["La cama es muy grande y cómoda.", "La cama es muy grande y comoda."],
+  },
+  {
+    en: "I want to drink a cold beer on the beach.",
+    answers: ["Quiero beber una cerveza fría en la playa.", "Quiero beber una cerveza fria en la playa."],
+  },
+  {
+    en: "The neighbour makes a lot of noise at night.",
+    answers: ["El vecino hace mucho ruido por la noche.", "La vecina hace mucho ruido por la noche."],
+  },
+  {
+    en: "I need the key because the window is closed.",
+    answers: ["Necesito la llave porque la ventana está cerrada.", "Necesito la llave porque la ventana esta cerrada."],
+  },
+  {
+    en: "The doctor is friendly but his kitchen is small.",
+    answers: ["El médico es simpático pero su cocina es pequeña.", "El medico es simpatico pero su cocina es pequeña.", "El medico es simpatico pero su cocina es pequena."],
+  },
+  {
+    en: "I am going to the market because I need to buy new food.",
+    answers: ["Voy al mercado porque necesito comprar comida nueva.", "Voy al mercado porque necesito comprar comida."],
+  },
+  {
+    en: "The music is slow and pretty tonight.",
+    answers: ["La música es lenta y bonita esta noche.", "La musica es lenta y bonita esta noche."],
+  },
+  {
+    en: "I can't sleep because I have a very strange dream.",
+    answers: ["No puedo dormir porque tengo un sueño muy extraño.", "No puedo dormir porque tengo un sueno muy extrano.", "No puedo dormir porque tengo un sueño extraño."],
+  },
+  {
+    en: "The ticket is important — I can't go without it.",
+    answers: ["El billete es importante — no puedo ir sin él.", "El billete es importante no puedo ir sin el.", "El billete es importante — no puedo ir sin el."],
+  },
+  {
+    en: "The pharmacy is near the corner.",
+    answers: ["La farmacia está cerca de la esquina.", "La farmacia esta cerca de la esquina."],
+  },
+  {
+    en: "I want to live near the beach because the sun is beautiful.",
+    answers: ["Quiero vivir cerca de la playa porque el sol es bonito.", "Quiero vivir cerca de la playa porque el sol es hermoso."],
+  },
+  {
+    en: "Breakfast is easy — I drink coffee and eat bread.",
+    answers: ["El desayuno es fácil — bebo café y como pan.", "El desayuno es facil — bebo cafe y como pan.", "El desayuno es facil bebo cafe y como pan."],
+  },
+  {
+    en: "I have an old memory of the mountain with my family.",
+    answers: ["Tengo un recuerdo viejo de la montaña con mi familia.", "Tengo un recuerdo viejo de la montana con mi familia."],
+  },
+  {
+    en: "The bus is slow today — I am going to walk.",
+    answers: ["El autobús es lento hoy — voy a caminar.", "El autobus es lento hoy voy a caminar.", "El autobús es lento hoy, voy a caminar."],
+  },
+  {
+    en: "The rubbish is near the door — can you take it?",
+    answers: ["La basura está cerca de la puerta — ¿puedes llevarla?", "La basura esta cerca de la puerta puedes llevarla?", "La basura está cerca de la puerta, ¿puedes llevarla?"],
+  },
+  {
+    en: "I think that the football match is very interesting.",
+    answers: ["Pienso que el partido de fútbol es muy interesante.", "Pienso que el partido de futbol es muy interesante.", "Creo que el partido de fútbol es muy interesante."],
+  },
+  {
+    en: "The bank is closed today, but there is a nice bench in the park.",
+    answers: ["El banco está cerrado hoy, pero hay un banco bonito en el parque.", "El banco esta cerrado hoy pero hay un banco bonito en el parque."],
+  },
+  {
+    en: "Good luck! — the doctor says that the operation is easy.",
+    answers: ["¡Buena suerte! — el médico dice que la operación es fácil.", "Buena suerte el medico dice que la operacion es facil.", "¡Buena suerte! el médico dice que la operación es fácil."],
+  },
+  {
+    en: "Laughter is important — life without laughter is boring.",
+    answers: ["La risa es importante — la vida sin risa es aburrida.", "La risa es importante la vida sin risa es aburrida."],
+  },
+  {
+    en: "Lunch at the market is good, fast and cheap.",
+    answers: ["El almuerzo en el mercado es bueno, rápido y barato.", "El almuerzo en el mercado es bueno rapido y barato."],
+  },
+];
+
+const newWords = [
+  ["muy","very"], ["cómoda / comoda","comfortable"], ["fría / fria","cold (for things)"],
+  ["por la noche","at night"], ["porque","because"], ["cerrado/a","closed"],
+  ["su","his / her / their"], ["sin","without"], ["cerca de","near / close to"],
+  ["dormir","to sleep"], ["extraño / extrano","strange / odd"], ["caminar","to walk"],
+  ["pan","bread"], ["café / cafe","coffee"], ["la puerta","the door"],
+  ["llevar","to carry / take"], ["el parque","the park"], ["barato","cheap"],
+  ["hay","there is / there are"], ["dice","says (from decir)"], ["la vida","life"],
+  ["que","that (joining two ideas)"], ["mi","my"],
+];
+
+// Scoring
+let scores = { perfect: 0, close: 0, miss: 0 };
+let deck = [];
+let idx = 0;
+let checked = false;
+
+// Strip accents for comparison
+function stripAccents(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+// Clean string for comparison: lowercase, no accents, no punctuation
+function clean(str) {
+  return stripAccents(str.toLowerCase())
+    .replace(/[¿¡.,!?;:\-—"'()]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Levenshtein distance for fuzzy matching
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, (_, i) => [i]);
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i-1] === b[j-1]
+        ? dp[i-1][j-1]
+        : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+
+// Match a typed word against a correct word: 'green', 'yellow', 'red'
+function matchWord(typed, correct) {
+  const t = clean(typed), c = clean(correct);
+  if (t === c) return 'green';
+  const dist = levenshtein(t, c);
+  const threshold = Math.max(1, Math.floor(c.length * 0.35));
+  if (dist <= threshold) return 'yellow';
+  return 'red';
+}
+
+// Try to match typed input against all accepted answers, return best result
+function getBestMatch(typedRaw) {
+  const typedWords = clean(typedRaw).split(' ').filter(w => w.length > 0);
+  let bestScore = -1;
+  let bestResult = null;
+
+  sentences[deck[idx]].answers.forEach(ans => {
+    const correctWords = clean(ans).split(' ').filter(w => w.length > 0);
+    const rawCorrectWords = ans.replace(/[¿¡.,!?;:\-—"'()]/g,'').trim().split(/\s+/);
+
+    // Build a set of all correct words for misplacement detection
+    const correctWordSet = new Set(correctWords);
+
+    // Align typed words to correct words greedily
+    const result = [];
+    let ti = 0;
+
+    for (let ci = 0; ci < correctWords.length; ci++) {
+      if (ti < typedWords.length) {
+        const m = matchWord(typedWords[ti], correctWords[ci]);
+        if (m === 'red') {
+          // Check if this typed word exists elsewhere in the correct sentence
+          const isElsewhere = correctWordSet.has(clean(typedWords[ti]));
+          result.push({ correct: rawCorrectWords[ci], typed: typedWords[ti], match: isElsewhere ? 'misplaced' : 'red' });
+        } else {
+          result.push({ correct: rawCorrectWords[ci], typed: typedWords[ti], match: m });
+        }
+        ti++;
+      } else {
+        result.push({ correct: rawCorrectWords[ci], typed: null, match: 'missing' });
+      }
+    }
+
+    // Extra typed words
+    while (ti < typedWords.length) {
+      result.push({ correct: null, typed: typedWords[ti], match: 'extra' });
+      ti++;
+    }
+
+    const score = result.reduce((acc, r) => {
+      if (r.match === 'green') return acc + 2;
+      if (r.match === 'yellow') return acc + 1;
+      if (r.match === 'misplaced') return acc + 1;
+      return acc;
+    }, 0);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestResult = { result, correctWords, rawCorrectWords, answer: ans };
+    }
+  });
+
+  return bestResult;
+}
+
+function buildDeck() {
+  deck = [...Array(sentences.length).keys()].sort(() => Math.random() - 0.5);
+  idx = 0; checked = false;
+  scores = { perfect: 0, close: 0, miss: 0 };
+  updateScorePills();
+  document.getElementById('total').textContent = deck.length;
+  showCard();
+}
+
+function showCard() {
+  if (idx >= deck.length) { showDone(); return; }
+  const s = sentences[deck[idx]];
+  document.getElementById('english-prompt').textContent = s.en;
+  document.getElementById('sent-num').textContent = '#' + (idx + 1);
+  document.getElementById('cur').textContent = idx + 1;
+  document.getElementById('s-left').textContent = deck.length - idx;
+  document.getElementById('answer-input').value = '';
+  document.getElementById('answer-input').disabled = false;
+  document.getElementById('feedback-block').classList.add('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('tryAgainBtn').classList.add('hidden');
+  document.getElementById('prog').style.width = (idx / deck.length * 100) + '%';
+  document.getElementById('answer-input').focus();
+  checked = false;
+}
+
+function checkAnswer() {
+  if (checked) return;
+  const typed = document.getElementById('answer-input').value.trim();
+  if (!typed) return;
+
+  checked = true;
+  document.getElementById('answer-input').disabled = true;
+
+  const { result, answer } = getBestMatch(typed);
+
+  // Render word chips
+  const wf = document.getElementById('word-feedback');
+  wf.innerHTML = '';
+  let greens = 0, yellows = 0, reds = 0;
+
+  result.forEach(r => {
+    const chip = document.createElement('div');
+    if (r.match === 'green') {
+      chip.className = 'word-chip chip-green';
+      chip.innerHTML = `${r.correct}`;
+      greens++;
+    } else if (r.match === 'yellow') {
+      chip.className = 'word-chip chip-yellow';
+      chip.innerHTML = `${r.correct}<span class="typed">you: ${r.typed}</span>`;
+      yellows++;
+    } else if (r.match === 'misplaced') {
+      chip.className = 'word-chip chip-blue';
+      chip.innerHTML = `${r.correct}<span class="typed">↕ ${r.typed}</span>`;
+      reds++;
+    } else if (r.match === 'missing') {
+      chip.className = 'word-chip chip-missing';
+      chip.innerHTML = `${r.correct}<span class="typed">missing</span>`;
+      reds++;
+    } else if (r.match === 'extra') {
+      chip.className = 'word-chip chip-red';
+      chip.innerHTML = `${r.typed}<span class="typed">extra</span>`;
+      reds++;
+    } else {
+      chip.className = 'word-chip chip-red';
+      chip.innerHTML = `${r.correct}<span class="typed">you: ${r.typed}</span>`;
+      reds++;
+    }
+    wf.appendChild(chip);
+  });
+
+  // Summary message
+  const total = result.length;
+  const summary = document.getElementById('result-summary');
+  const correctAns = document.getElementById('correct-answer');
+
+  if (greens === total && yellows === 0 && reds === 0) {
+    summary.innerHTML = `<span style="color:var(--green)">🎉 Perfect! Every word correct.</span>`;
+    correctAns.textContent = '';
+    scores.perfect++;
+  } else if (reds === 0) {
+    summary.innerHTML = `<span style="color:var(--yellow)">🟡 Nearly there — ${yellows} word${yellows>1?'s':''} slightly off, ${greens} correct.</span>`;
+    correctAns.textContent = '✓ ' + answer;
+    scores.close++;
+  } else if (greens > 0 || yellows > 0) {
+    summary.innerHTML = `<span style="color:var(--yellow)">Getting there — ${greens} correct, ${yellows} close, ${reds} missed.</span>`;
+    correctAns.textContent = '✓ ' + answer;
+    scores.close++;
+  } else {
+    summary.innerHTML = `<span style="color:var(--red)">Keep going — this one needs more practice.</span>`;
+    correctAns.textContent = '✓ ' + answer;
+    scores.miss++;
+  }
+
+  updateScorePills();
+  document.getElementById('feedback-block').classList.remove('hidden');
+  document.getElementById('nextBtn').classList.remove('hidden');
+  document.getElementById('tryAgainBtn').classList.remove('hidden');
+}
+
+function next() {
+  idx++;
+  showCard();
+}
+
+function tryAgain() {
+  // Undo the score that was just recorded for this attempt
+  const typed = document.getElementById('answer-input').value.trim();
+  // Reverse whichever score bucket was incremented
+  const summary = document.getElementById('result-summary').innerHTML;
+  if (summary.includes('Perfect')) scores.perfect = Math.max(0, scores.perfect - 1);
+  else if (summary.includes('red')) scores.miss = Math.max(0, scores.miss - 1);
+  else scores.close = Math.max(0, scores.close - 1);
+  updateScorePills();
+
+  // Reset the card for a fresh attempt
+  document.getElementById('answer-input').value = '';
+  document.getElementById('answer-input').disabled = false;
+  document.getElementById('feedback-block').classList.add('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('tryAgainBtn').classList.add('hidden');
+  document.getElementById('answer-input').focus();
+  checked = false;
+}
+
+function reshuffle() {
+  buildDeck();
+}
+
+function updateScorePills() {
+  document.getElementById('sc-perfect').textContent = scores.perfect;
+  document.getElementById('sc-close').textContent = scores.close;
+  document.getElementById('sc-miss').textContent = scores.miss;
+}
+
+function showDone() {
+  const total = scores.perfect + scores.close + scores.miss;
+  document.getElementById('card').innerHTML = `
+    <div class="done-card">
+      <div style="font-size:2.4rem;margin-bottom:12px">🎉</div>
+      <h2>¡Terminado!</h2>
+      <p style="color:var(--muted);font-size:0.95rem;margin-bottom:18px">You completed all ${total} sentences!</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <div class="score-pill pill-green">🟢 Perfect: ${scores.perfect}</div>
+        <div class="score-pill pill-yellow">🟡 Close: ${scores.close}</div>
+        <div class="score-pill pill-red">🔴 Missed: ${scores.miss}</div>
+      </div>
+      <p style="color:var(--muted);font-size:0.85rem;margin-top:16px">Click Shuffle to go again!</p>
+    </div>`;
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('prog').style.width = '100%';
+}
+
+function toggleRef() {
+  document.getElementById('ref-table').classList.toggle('hidden');
+}
+
+// Build reference table
+newWords.forEach(([es, en]) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${es}</td><td>${en}</td>`;
+  document.getElementById('ref-body').appendChild(tr);
+});
+
+// Enter key to check or advance
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (!checked) checkAnswer();
+    else next();
+  }
+});
+
+buildDeck();
+</script>
+</body>
+</html>
