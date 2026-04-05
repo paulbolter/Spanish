@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spanish Sentence Practice 4</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1923; --card: #162030; --ink: #e8e0d0; --muted: #7a8a9a;
+    --accent: #e8a020; --green: #4db87a; --yellow: #facc15; --red: #f87171;
+    --blue: #60a5fa; --purple: #c084fc;
+    --border: rgba(255,255,255,0.07); --shadow: rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 36px 20px 60px; background-image: radial-gradient(ellipse at 20% 10%, rgba(232,160,32,0.06) 0%, transparent 55%), radial-gradient(ellipse at 80% 90%, rgba(77,184,122,0.05) 0%, transparent 55%); }
+  header { text-align: center; margin-bottom: 10px; }
+  header h1 { font-family: 'Lora', serif; font-size: 2.4rem; font-weight: 700; letter-spacing: -0.5px; color: var(--ink); line-height: 1.1; }
+  header h1 em { font-style: italic; color: var(--accent); }
+  header p { color: var(--muted); font-size: 0.88rem; margin-top: 8px; }
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 14px 0 4px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.73rem; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .mode-toggle { display: flex; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 14px; padding: 4px; gap: 4px; margin: 16px 0 6px; }
+  .mode-btn { padding: 10px 20px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.86rem; font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--muted); transition: all 0.2s; }
+  .mode-btn.active { background: var(--accent); color: #0f1923; box-shadow: 0 2px 12px rgba(232,160,32,0.3); }
+  .mode-btn:not(.active):hover { color: var(--ink); background: rgba(255,255,255,0.06); }
+  .mode-hint { font-size: 0.8rem; color: var(--muted); margin-bottom: 16px; text-align: center; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 680px; margin: 10px 0; font-size: 0.83rem; color: var(--muted); font-weight: 500; }
+  .prog-wrap { width: 100%; max-width: 680px; height: 3px; background: rgba(255,255,255,0.06); border-radius: 4px; margin-bottom: 18px; overflow: hidden; }
+  .prog-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 4px; transition: width 0.4s ease; }
+  .score-row { display: flex; gap: 10px; margin-bottom: 16px; }
+  .score-pill { padding: 5px 14px; border-radius: 100px; font-size: 0.8rem; font-weight: 600; }
+  .pill-green  { background: rgba(77,184,122,0.12); color: var(--green); border: 1px solid rgba(77,184,122,0.22); }
+  .pill-yellow { background: rgba(250,204,21,0.12); color: var(--yellow); border: 1px solid rgba(250,204,21,0.22); }
+  .card-wrap { width: 100%; max-width: 680px; margin-bottom: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 44px 36px; position: relative; min-height: 220px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 12px 50px var(--shadow); }
+  .sentence-num { position: absolute; top: 20px; right: 22px; font-size: 0.75rem; color: var(--muted); font-weight: 600; letter-spacing: 1px; }
+  .card-type-tag { position: absolute; top: 18px; left: 22px; font-size: 0.65rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 9px; border-radius: 6px; }
+  .tag-q { background: rgba(96,165,250,0.12); color: var(--blue); }
+  .tag-n { background: rgba(248,113,113,0.12); color: var(--red); }
+  .tag-f { background: rgba(192,132,252,0.12); color: var(--purple); }
+  .tag-p { background: rgba(77,184,122,0.12); color: var(--green); }
+  .tag-s { background: rgba(232,160,32,0.12); color: var(--accent); }
+  .section-label { font-size: 0.66rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; opacity: 0.8; }
+  .label-es { color: var(--accent); } .label-en { color: var(--green); } .label-muted { color: var(--muted); }
+  .spanish-sentence { font-family: 'Lora', serif; font-size: 1.6rem; font-weight: 600; color: var(--ink); line-height: 1.5; }
+  .answer-block { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border); animation: rise 0.35s ease; }
+  .english-sentence { font-family: 'Lora', serif; font-size: 1.35rem; font-style: italic; color: var(--green); line-height: 1.5; }
+  .new-words-block { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .new-words-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .new-word-chip { background: rgba(232,160,32,0.1); border: 1px solid rgba(232,160,32,0.2); border-radius: 8px; padding: 3px 10px; font-size: 0.78rem; color: var(--accent); font-weight: 500; }
+  .new-word-chip span { color: var(--muted); font-style: italic; }
+  .english-prompt { font-family: 'Lora', serif; font-size: 1.15rem; font-style: italic; color: var(--muted); line-height: 1.5; margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .gap-sentence { font-family: 'Lora', serif; font-size: 1.4rem; font-weight: 600; color: var(--ink); line-height: 2.4; word-spacing: 2px; }
+  select.gap-select { font-family: 'Lora', serif; font-size: 1rem; font-weight: 600; background: rgba(232,160,32,0.1); border: 1.5px solid rgba(232,160,32,0.4); border-radius: 8px; color: var(--accent); padding: 2px 6px; cursor: pointer; outline: none; transition: all 0.2s; vertical-align: middle; max-width: 160px; }
+  select.gap-select:focus { border-color: var(--accent); background: rgba(232,160,32,0.15); }
+  select.gap-select option { background: #1a2a3a; color: var(--ink); }
+  select.gap-select.correct { background: rgba(77,184,122,0.15); border-color: var(--green); color: var(--green); }
+  select.gap-select.wrong { background: rgba(248,113,113,0.15); border-color: var(--red); color: var(--red); }
+  .gap-feedback { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); animation: rise 0.3s ease; font-size: 0.9rem; line-height: 1.6; color: var(--muted); }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .btn-row { display: flex; gap: 10px; width: 100%; max-width: 680px; flex-wrap: wrap; }
+  .btn { flex: 1; padding: 13px 18px; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.18s; border: none; min-width: 110px; }
+  .btn-reveal { background: var(--accent); color: #0f1923; box-shadow: 0 4px 20px rgba(232,160,32,0.3); }
+  .btn-reveal:hover { background: #f0b030; transform: translateY(-1px); }
+  .btn-check { background: var(--accent); color: #0f1923; box-shadow: 0 4px 20px rgba(232,160,32,0.3); }
+  .btn-check:hover { background: #f0b030; transform: translateY(-1px); }
+  .btn-next { background: rgba(255,255,255,0.06); color: var(--ink); border: 1px solid var(--border); }
+  .btn-next:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
+  .btn-shuffle { background: transparent; color: var(--green); border: 1px solid rgba(77,184,122,0.25); flex: 0 0 auto; }
+  .btn-shuffle:hover { background: rgba(77,184,122,0.08); }
+  .btn-tryagain { background: transparent; color: var(--yellow); border: 1px solid rgba(250,204,21,0.25); }
+  .btn-tryagain:hover { background: rgba(250,204,21,0.08); }
+  .hidden { display: none !important; }
+  .ref-toggle { margin-top: 28px; font-size: 0.82rem; color: var(--accent); cursor: pointer; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-align: center; opacity: 0.8; }
+  .ref-table { max-width: 680px; width: 100%; margin-top: 14px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--card); font-size: 0.85rem; }
+  .ref-table table { width: 100%; border-collapse: collapse; }
+  .ref-table th { background: rgba(255,255,255,0.04); padding: 10px 14px; text-align: left; font-size: 0.68rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .ref-table td { padding: 9px 14px; border-top: 1px solid var(--border); color: var(--ink); }
+  .ref-table td:first-child { font-family: 'Lora', serif; font-size: 0.95rem; font-weight: 600; color: var(--accent); }
+  .ref-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .done-screen { text-align: center; padding: 30px 20px; }
+  .done-screen h2 { font-family: 'Lora', serif; font-size: 2rem; margin-bottom: 10px; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Spanish Sentence <em>Practice</em></h1>
+  <p>Set 4 — 10 sentences — two ways to practise</p>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Question</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Negative</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Frequency</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Posible/Imposible</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Statement</div>
+</div>
+
+<div class="mode-toggle">
+  <button class="mode-btn active" id="btn-read" onclick="switchMode('read')">📖 Read &amp; Translate</button>
+  <button class="mode-btn" id="btn-gap" onclick="switchMode('gap')">🧩 Gap Fill</button>
+</div>
+<div class="mode-hint" id="mode-hint">Spanish shown → think → Spacebar to reveal</div>
+
+<div class="topbar">
+  <div>Sentence <strong id="cur">1</strong> of <strong id="total">10</strong></div>
+  <div id="topbar-right">Seen: <strong id="s-seen">0</strong> &nbsp;|&nbsp; Remaining: <strong id="s-left">10</strong></div>
+</div>
+
+<div class="prog-wrap"><div class="prog-bar" id="prog" style="width:0%"></div></div>
+
+<div class="score-row hidden" id="score-row">
+  <div class="score-pill pill-green">✅ Perfect: <span id="sc-perfect">0</span></div>
+  <div class="score-pill pill-yellow">🟡 With hints: <span id="sc-hint">0</span></div>
+</div>
+
+<div class="card-wrap">
+  <div class="card" id="card">
+    <div class="card-type-tag" id="card-type-tag"></div>
+    <div class="sentence-num" id="sent-num">#1</div>
+    <div id="read-content">
+      <div class="section-label label-es">🇪🇸 Spanish</div>
+      <div class="spanish-sentence" id="spanish">—</div>
+      <div class="answer-block hidden" id="answer-block">
+        <div class="section-label label-en">🇬🇧 English</div>
+        <div class="english-sentence" id="english">—</div>
+        <div class="new-words-block" id="new-words-block"></div>
+      </div>
+    </div>
+    <div id="gap-content" class="hidden">
+      <div class="section-label label-muted">🇬🇧 English</div>
+      <div class="english-prompt" id="gap-english">—</div>
+      <div class="section-label label-es">🇪🇸 Complete the Spanish</div>
+      <div class="gap-sentence" id="gap-sentence"></div>
+      <div class="gap-feedback hidden" id="gap-feedback"></div>
+    </div>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="btn btn-reveal" id="revealBtn" onclick="reveal()">👁 Reveal</button>
+  <button class="btn btn-check hidden" id="checkBtn" onclick="checkGaps()">✓ Check answers</button>
+  <button class="btn btn-tryagain hidden" id="tryAgainBtn" onclick="tryAgain()">↩ Try again</button>
+  <button class="btn btn-next hidden" id="nextBtn" onclick="next()">→ Next</button>
+  <button class="btn btn-shuffle" onclick="reshuffle()">⟳ Shuffle</button>
+</div>
+
+<div class="ref-toggle" onclick="toggleRef()">📋 Show / hide vocabulary list</div>
+<div class="ref-table hidden" id="ref-table">
+  <table>
+    <thead><tr><th>Spanish</th><th>English</th></tr></thead>
+    <tbody id="ref-body"></tbody>
+  </table>
+</div>
+
+<script>
+const typeConfig = {
+  q: { label: '❓ Question',         cls: 'tag-q' },
+  n: { label: '🚫 Negative',         cls: 'tag-n' },
+  f: { label: '🔄 Frequency',        cls: 'tag-f' },
+  p: { label: '✅ Posible/Imposible', cls: 'tag-p' },
+  s: { label: '💬 Statement',        cls: 'tag-s' }
+};
+
+const sentences = [
+  {
+    type: 'n',
+    es: "No puedo recordar su nombre ahora mismo.",
+    en: "I can't remember his name right now.",
+    new: [["recordar","to remember"], ["ahora mismo","right now"]],
+    gaps: [
+      { word: "No",    distractors: ["Nunca", "Tampoco", "Sin"] },
+      { word: "puedo", distractors: ["puede", "quiero", "debo"] },
+      { word: "su",    distractors: ["mi", "tu", "la"] },
+      { word: "ahora", distractors: ["siempre", "nunca", "también"] }
+    ]
+  },
+  {
+    type: 'n',
+    es: "No estoy contento con el resultado — tú tampoco.",
+    en: "I am not happy with the result — you neither.",
+    new: [["contento","happy / pleased"], ["resultado","result"], ["tampoco","neither / not either"]],
+    gaps: [
+      { word: "estoy",    distractors: ["soy", "tengo", "estamos"] },
+      { word: "contento", distractors: ["contenta", "cansado", "feliz"] },
+      { word: "con",      distractors: ["para", "por", "de"] },
+      { word: "tampoco.", distractors: ["también.", "siempre.", "nunca."] }
+    ]
+  },
+  {
+    type: 'n',
+    es: "Ella no sabe nada sobre el problema.",
+    en: "She knows nothing about the problem.",
+    new: [["nada","nothing"], ["problema","problem"]],
+    gaps: [
+      { word: "no",    distractors: ["nunca", "tampoco", "sin"] },
+      { word: "sabe",  distractors: ["conoce", "tiene", "puede"] },
+      { word: "nada",  distractors: ["mucho", "algo", "todo"] },
+      { word: "sobre", distractors: ["para", "por", "con"] }
+    ]
+  },
+  {
+    type: 'n',
+    es: "No voy a llevar ropa de verano — hace frío.",
+    en: "I'm not going to take summer clothes — it's cold.",
+    new: [["ropa","clothes"], ["verano","summer"], ["hace frío","it's cold"]],
+    gaps: [
+      { word: "voy",    distractors: ["vengo", "vamos", "van"] },
+      { word: "llevar", distractors: ["traer", "comprar", "tener"] },
+      { word: "ropa",   distractors: ["comida", "paraguas", "llave"] },
+      { word: "frío.",  distractors: ["calor.", "sol.", "viento."] }
+    ]
+  },
+  {
+    type: 'n',
+    es: "No hay ningún hotel cerca de la playa aquí.",
+    en: "There is no hotel near the beach here.",
+    new: [["ningún","no / not any (before masc noun)"], ["aquí","here"]],
+    gaps: [
+      { word: "hay",    distractors: ["es", "está", "son"] },
+      { word: "ningún", distractors: ["un", "el", "algún"] },
+      { word: "cerca",  distractors: ["lejos", "fuera", "dentro"] },
+      { word: "aquí.",  distractors: ["allí.", "también.", "hoy."] }
+    ]
+  },
+  {
+    type: 'p',
+    es: "Es posible viajar sin dinero, pero es muy difícil.",
+    en: "It is possible to travel without money, but it is very difficult.",
+    new: [["posible","possible"], ["viajar","to travel"], ["difícil","difficult"]],
+    gaps: [
+      { word: "posible",  distractors: ["imposible", "necesario", "fácil"] },
+      { word: "viajar",   distractors: ["vivir", "comprar", "dormir"] },
+      { word: "sin",      distractors: ["con", "para", "por"] },
+      { word: "muy",      distractors: ["mucho", "tan", "bien"] },
+      { word: "difícil.", distractors: ["fácil.", "bonito.", "posible."] }
+    ]
+  },
+  {
+    type: 'p',
+    es: "Es imposible entender todo sin estudiar.",
+    en: "It is impossible to understand everything without studying.",
+    new: [["imposible","impossible"], ["entender","to understand"], ["estudiar","to study"]],
+    gaps: [
+      { word: "imposible", distractors: ["posible", "difícil", "necesario"] },
+      { word: "entender",  distractors: ["conocer", "saber", "escuchar"] },
+      { word: "todo",      distractors: ["nada", "algo", "mucho"] },
+      { word: "sin",       distractors: ["con", "para", "por"] }
+    ]
+  },
+  {
+    type: 'p',
+    es: "¿Es posible cambiar el billete de tren mañana?",
+    en: "Is it possible to change the train ticket tomorrow?",
+    new: [["cambiar","to change / to exchange"], ["mañana","tomorrow"]],
+    gaps: [
+      { word: "posible",  distractors: ["imposible", "necesario", "fácil"] },
+      { word: "cambiar",  distractors: ["comprar", "llevar", "traer"] },
+      { word: "billete",  distractors: ["paraguas", "llave", "ropa"] },
+      { word: "mañana?",  distractors: ["hoy?", "nunca?", "siempre?"] }
+    ]
+  },
+  {
+    type: 's',
+    es: "Mi profesora es española y también habla inglés.",
+    en: "My teacher is Spanish and she also speaks English.",
+    new: [["profesora","teacher (f)"], ["española","Spanish (f)"], ["habla","she speaks"]],
+    gaps: [
+      { word: "Mi",      distractors: ["Su", "Tu", "La"] },
+      { word: "es",      distractors: ["está", "son", "hay"] },
+      { word: "también", distractors: ["tampoco", "nunca", "pero"] },
+      { word: "inglés.", distractors: ["francés.", "alemán.", "chino."] }
+    ]
+  },
+  {
+    type: 's',
+    es: "Voy a traer un regalo para ti mañana.",
+    en: "I am going to bring a gift for you tomorrow.",
+    new: [["regalo","gift"], ["traer","to bring (towards here)"]],
+    gaps: [
+      { word: "traer",  distractors: ["llevar", "comprar", "dar"] },
+      { word: "regalo", distractors: ["billete", "llave", "libro"] },
+      { word: "para",   distractors: ["por", "a", "con"] },
+      { word: "ti",     distractors: ["mi", "él", "ella"] }
+    ]
+  }
+];
+
+const allNewWords = [];
+const seen = new Set();
+sentences.forEach(s => {
+  (s.new || []).forEach(([es, en]) => {
+    if (!seen.has(es)) { seen.add(es); allNewWords.push([es, en]); }
+  });
+});
+
+let mode = 'read', deck = [], idx = 0, revealed = false, seenCount = 0, gapChecked = false;
+let scores = { perfect: 0, hint: 0 };
+
+function buildDeck() {
+  deck = sentences.map((_, i) => i);
+  idx = 0; revealed = false; seenCount = 0; gapChecked = false;
+  scores = { perfect: 0, hint: 0 };
+  updateScorePills(); showCard();
+}
+
+function reshuffle() {
+  deck = sentences.map((_, i) => i).sort(() => Math.random() - 0.5);
+  idx = 0; revealed = false; seenCount = 0; gapChecked = false;
+  scores = { perfect: 0, hint: 0 };
+  updateScorePills(); showCard();
+}
+
+function switchMode(m) {
+  mode = m;
+  document.getElementById('btn-read').classList.toggle('active', m === 'read');
+  document.getElementById('btn-gap').classList.toggle('active', m === 'gap');
+  document.getElementById('mode-hint').textContent = m === 'read'
+    ? 'Spanish shown → think → Spacebar to reveal'
+    : 'English shown → choose the correct Spanish words';
+  document.getElementById('score-row').classList.toggle('hidden', m === 'read');
+  deck = sentences.map((_, i) => i);
+  if (m === 'gap') deck.sort(() => Math.random() - 0.5);
+  idx = 0; revealed = false; seenCount = 0; gapChecked = false;
+  scores = { perfect: 0, hint: 0 };
+  updateScorePills(); showCard();
+}
+
+function showCard() {
+  if (idx >= deck.length) { showDone(); return; }
+  const s = sentences[deck[idx]];
+  const tt = document.getElementById('card-type-tag');
+  const cfg = typeConfig[s.type] || typeConfig['s'];
+  tt.textContent = cfg.label; tt.className = 'card-type-tag ' + cfg.cls;
+  document.getElementById('sent-num').textContent = '#' + (idx + 1);
+  document.getElementById('cur').textContent = idx + 1;
+  document.getElementById('total').textContent = deck.length;
+  document.getElementById('prog').style.width = ((idx / deck.length) * 100) + '%';
+  updateTopbar();
+  if (mode === 'read') {
+    document.getElementById('read-content').classList.remove('hidden');
+    document.getElementById('gap-content').classList.add('hidden');
+    document.getElementById('spanish').textContent = s.es;
+    document.getElementById('answer-block').classList.add('hidden');
+    revealed = false;
+    document.getElementById('revealBtn').classList.remove('hidden');
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('checkBtn').classList.add('hidden');
+    document.getElementById('tryAgainBtn').classList.add('hidden');
+  } else {
+    document.getElementById('read-content').classList.add('hidden');
+    document.getElementById('gap-content').classList.remove('hidden');
+    document.getElementById('gap-english').textContent = s.en;
+    document.getElementById('gap-feedback').classList.add('hidden');
+    document.getElementById('gap-feedback').innerHTML = '';
+    buildGapCard(s); gapChecked = false;
+    document.getElementById('revealBtn').classList.add('hidden');
+    document.getElementById('checkBtn').classList.remove('hidden');
+    document.getElementById('tryAgainBtn').classList.add('hidden');
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('score-row').classList.remove('hidden');
+  }
+}
+
+function reveal() {
+  if (revealed) { next(); return; }
+  revealed = true; seenCount++;
+  const s = sentences[deck[idx]];
+  document.getElementById('answer-block').classList.remove('hidden');
+  document.getElementById('english').textContent = s.en;
+  const nb = document.getElementById('new-words-block');
+  if (s.new && s.new.length > 0) {
+    nb.innerHTML = '<div class="section-label label-muted">🆕 New words</div><div class="new-words-list">' +
+      s.new.map(([es, en]) => `<div class="new-word-chip">${es} <span>– ${en}</span></div>`).join('') + '</div>';
+    nb.classList.remove('hidden');
+  } else { nb.classList.add('hidden'); }
+  document.getElementById('revealBtn').classList.add('hidden');
+  document.getElementById('nextBtn').classList.remove('hidden');
+  updateTopbar();
+}
+
+function buildGapCard(s) {
+  const container = document.getElementById('gap-sentence');
+  container.innerHTML = ''; scores._hintCounted = false;
+  const tokens = s.es.split(' ');
+  const gapQueue = {};
+  s.gaps.forEach(g => { if (!gapQueue[g.word]) gapQueue[g.word] = []; gapQueue[g.word].push(g.distractors); });
+  const gapUsed = {};
+  tokens.forEach((token, ti) => {
+    if (ti > 0) container.appendChild(document.createTextNode(' '));
+    const queue = gapQueue[token];
+    const usedCount = gapUsed[token] || 0;
+    if (queue && usedCount < queue.length) {
+      gapUsed[token] = usedCount + 1;
+      const options = [token, ...queue[usedCount]].sort(() => Math.random() - 0.5);
+      const sel = document.createElement('select');
+      sel.className = 'gap-select'; sel.dataset.correct = token;
+      const blank = document.createElement('option'); blank.value = ''; blank.textContent = '___';
+      sel.appendChild(blank);
+      options.forEach(opt => { const o = document.createElement('option'); o.value = opt; o.textContent = opt; sel.appendChild(o); });
+      container.appendChild(sel);
+    } else {
+      const span = document.createElement('span'); span.textContent = token; container.appendChild(span);
+    }
+  });
+}
+
+function checkGaps() {
+  if (gapChecked) return; gapChecked = true;
+  const selects = document.querySelectorAll('#gap-sentence select.gap-select');
+  let allCorrect = true;
+  selects.forEach(sel => {
+    if (sel.value === sel.dataset.correct) { sel.disabled = true; sel.classList.remove('wrong'); sel.classList.add('correct'); }
+    else { allCorrect = false; sel.classList.remove('correct'); sel.classList.add('wrong'); }
+  });
+  const fb = document.getElementById('gap-feedback');
+  if (allCorrect) {
+    fb.innerHTML = `<span style="color:var(--green)">🎉 Perfect — every gap correct!</span>`;
+    scores.perfect++; fb.classList.remove('hidden'); updateScorePills();
+    document.getElementById('checkBtn').classList.add('hidden');
+    document.getElementById('tryAgainBtn').classList.add('hidden');
+    document.getElementById('nextBtn').classList.remove('hidden');
+  } else {
+    fb.innerHTML = `<span style="color:var(--red)">Not quite — change the red ones and check again, or try the whole sentence again.</span>`;
+    if (!scores._hintCounted) { scores.hint++; scores._hintCounted = true; }
+    fb.classList.remove('hidden'); updateScorePills();
+    document.getElementById('checkBtn').classList.remove('hidden');
+    document.getElementById('tryAgainBtn').classList.remove('hidden');
+    document.getElementById('nextBtn').classList.add('hidden');
+  }
+  gapChecked = false;
+}
+
+function tryAgain() {
+  buildGapCard(sentences[deck[idx]]);
+  document.getElementById('gap-feedback').classList.add('hidden');
+  document.getElementById('checkBtn').classList.remove('hidden');
+  document.getElementById('tryAgainBtn').classList.add('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  gapChecked = false;
+}
+
+function next() { idx++; showCard(); }
+
+function updateTopbar() {
+  const left = Math.max(0, deck.length - idx);
+  document.getElementById('topbar-right').innerHTML = mode === 'read'
+    ? `Seen: <strong>${seenCount}</strong> &nbsp;|&nbsp; Remaining: <strong>${left}</strong>`
+    : `Remaining: <strong>${left}</strong>`;
+}
+
+function updateScorePills() {
+  document.getElementById('sc-perfect').textContent = scores.perfect;
+  document.getElementById('sc-hint').textContent = scores.hint;
+}
+
+function showDone() {
+  document.getElementById('card').innerHTML = mode === 'read'
+    ? `<div class="done-screen"><div style="font-size:2.6rem;margin-bottom:12px">🎉</div><h2>¡Perfecto!</h2><p style="color:var(--muted);font-size:0.95rem;">All 10 sentences done!<br>Click Shuffle to go again.</p></div>`
+    : `<div class="done-screen"><div style="font-size:2.4rem;margin-bottom:12px">🎉</div><h2>¡Terminado!</h2><p style="color:var(--muted);font-size:0.95rem;margin-bottom:16px">All 10 sentences complete!</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><div class="score-pill pill-green">✅ Perfect: ${scores.perfect}</div><div class="score-pill pill-yellow">🟡 With hints: ${scores.hint}</div></div><p style="color:var(--muted);font-size:0.85rem;margin-top:14px">Click Shuffle to go again!</p></div>`;
+  ['revealBtn','checkBtn','tryAgainBtn','nextBtn'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  document.getElementById('prog').style.width = '100%';
+}
+
+function toggleRef() { document.getElementById('ref-table').classList.toggle('hidden'); }
+
+allNewWords.forEach(([es, en]) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${es}</td><td>${en}</td>`;
+  document.getElementById('ref-body').appendChild(tr);
+});
+
+document.addEventListener('keydown', function(e) {
+  if (mode === 'read' && (e.code === 'Space' || e.key === ' ')) { e.preventDefault(); if (!revealed) reveal(); else next(); }
+});
+
+buildDeck();
+</script>
+</body>
+</html>
