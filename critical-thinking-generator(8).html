@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Think Deeper — Question Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ef;
+    --card: #ffffff;
+    --blue: #2563b0;
+    --text: #1a1a2e;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --shadow: 0 4px 24px rgba(37,99,176,0.08);
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 60px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.6rem;
+    color: var(--blue);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+
+  header h1 em {
+    font-style: italic;
+    color: #1a3a6e;
+  }
+
+  header p {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 32px 36px;
+    width: 100%;
+    max-width: 620px;
+    margin-bottom: 24px;
+  }
+
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 10px;
+  }
+
+  select {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    color: var(--text);
+    background: #fafafa;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232563b0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  select:focus {
+    outline: none;
+    border-color: var(--blue);
+    background-color: #fff;
+  }
+
+  optgroup { font-weight: 600; }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+  }
+
+  .difficulty-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .diff-btn {
+    flex: 1;
+    padding: 11px 8px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: #fafafa;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s;
+    text-align: center;
+  }
+
+  .diff-btn:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  .diff-btn.active {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: white;
+    font-weight: 600;
+  }
+
+  .diff-hint {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-style: italic;
+    min-height: 1.2em;
+  }
+
+  .generate-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .generate-btn:hover { background: #1a4d99; }
+  .generate-btn:active { transform: scale(0.98); }
+  .generate-btn:disabled { background: #93c5fd; cursor: not-allowed; transform: none; }
+
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2.5px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .question-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 36px;
+    width: 100%;
+    max-width: 620px;
+    border-left: 5px solid var(--blue);
+    display: none;
+    animation: fadeUp 0.4s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 14px;
+  }
+
+  .q-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.55rem;
+    line-height: 1.45;
+    color: var(--text);
+  }
+
+  .q-hint {
+    margin-top: 18px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .try-again {
+    margin-top: 20px;
+    background: none;
+    border: 1.5px solid var(--blue);
+    color: var(--blue);
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .try-again:hover { background: var(--blue); color: white; }
+
+  .error-msg {
+    color: #dc2626;
+    font-size: 0.9rem;
+    margin-top: 12px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Think <em>Deeper</em></h1>
+  <p>Pick a topic, choose your level, get a question worth talking about.</p>
+</header>
+
+<div class="card">
+
+  <div class="section-label">Choose a Topic</div>
+  <select id="topicSelect">
+    <option value="" disabled selected>— Select a topic —</option>
+  </select>
+
+  <div class="divider"></div>
+
+  <div class="section-label">Difficulty</div>
+  <div class="difficulty-row">
+    <button class="diff-btn" data-level="accessible" onclick="setDifficulty(this)">🟢 Accessible</button>
+    <button class="diff-btn active" data-level="challenging" onclick="setDifficulty(this)">🔵 Challenging</button>
+    <button class="diff-btn" data-level="advanced" onclick="setDifficulty(this)">🔴 Advanced</button>
+  </div>
+  <div class="diff-hint" id="diffHint">Requires some analysis and a supported opinion.</div>
+
+  <div class="divider"></div>
+
+  <button class="generate-btn" id="generateBtn" onclick="generateQuestion()">
+    <div class="spinner" id="spinner"></div>
+    <span id="btnText">Generate Question</span>
+  </button>
+  <div class="error-msg" id="errorMsg">Something went wrong. Please try again.</div>
+
+</div>
+
+<div class="question-card" id="questionCard">
+  <div class="q-label" id="qLabel">Your Question</div>
+  <div class="q-text" id="questionText"></div>
+  <div class="q-hint">Discuss with a partner — or think about your answer first.</div>
+  <button class="try-again" onclick="generateQuestion()">Generate another ↻</button>
+</div>
+
+<script>
+const categories = [
+  { label: "🌍 Our World", topics: ["The environment","Natural disasters","Cities vs countryside","The ocean","Space exploration","Animals and wildlife","Global fairness","Poverty and inequality","War and peace"] },
+  { label: "🤖 Technology & The Future", topics: ["Artificial intelligence","Robots","Future technology","Social media","Smartphones","Online privacy","Virtual reality","Esports and gaming","Video games","Self-driving cars"] },
+  { label: "👥 Society & People", topics: ["Leadership","Justice and fairness","Freedom","Power","Money","Fame","Kindness","Bullying","Gender equality","Immigration"] },
+  { label: "🧠 Big Questions", topics: ["The meaning of success","Happiness","Fear","Dreams and ambition","Change","The future","What makes a good life","Is competition good or bad"] },
+  { label: "🎓 Education & Careers", topics: ["The purpose of school","University and tertiary study","Future careers","Learning languages","AI and jobs","Working from home"] },
+  { label: "🎭 Culture & Creativity", topics: ["Music","Movies and cinema","Anime","Art","Fashion","Travel","Food and eating habits","Languages and culture"] },
+  { label: "⚽ Sport & Games", topics: ["Football","Chess","Competition and winning","Extreme sports","The Olympics","Sport and health"] },
+  { label: "❤️ Health & Wellbeing", topics: ["Mental health","Sleep","Fast food","Exercise and fresh air","Screen time"] },
+  { label: "🏠 Personal Life", topics: ["Friendship","Family","Growing up","Identity","Peer pressure"] }
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildDropdown() {
+  const select = document.getElementById('topicSelect');
+  shuffle(categories).forEach(cat => {
+    const group = document.createElement('optgroup');
+    group.label = cat.label;
+    cat.topics.forEach(topic => {
+      const opt = document.createElement('option');
+      opt.value = topic;
+      opt.textContent = topic;
+      group.appendChild(opt);
+    });
+    select.appendChild(group);
+  });
+}
+
+buildDropdown();
+
+const diffHints = {
+  accessible: "A clear, simple opinion question — good for everyone.",
+  challenging: "Requires some analysis and a supported opinion.",
+  advanced: "Complex and abstract — demands real critical thinking."
+};
+
+const diffInstructions = {
+  accessible: "The question should be straightforward and personal — something a B1 student can answer with a simple opinion and one or two reasons. Avoid abstract or philosophical framing. Keep vocabulary simple and direct.",
+  challenging: "The question should require the student to weigh up two sides, consider consequences, or defend a position with reasons. Suitable for B1–B2 students. Moderately complex vocabulary is fine.",
+  advanced: "The question should be intellectually demanding — abstract, philosophical, or ethically complex. It should challenge even strong B2 students to think carefully. Sophisticated vocabulary and multi-layered thinking required."
+};
+
+const diffLabels = {
+  accessible: "🟢 Accessible Question",
+  challenging: "🔵 Challenging Question",
+  advanced: "🔴 Advanced Question"
+};
+
+let currentDifficulty = "challenging";
+
+function setDifficulty(btn) {
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentDifficulty = btn.dataset.level;
+  document.getElementById('diffHint').textContent = diffHints[currentDifficulty];
+}
+
+async function generateQuestion() {
+  const topic = document.getElementById('topicSelect').value;
+  if (!topic) { alert('Please select a topic first.'); return; }
+
+  const btn = document.getElementById('generateBtn');
+  const spinner = document.getElementById('spinner');
+  const btnText = document.getElementById('btnText');
+  const errorMsg = document.getElementById('errorMsg');
+  const questionCard = document.getElementById('questionCard');
+
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  btnText.textContent = 'Thinking...';
+  errorMsg.style.display = 'none';
+  questionCard.style.display = 'none';
+
+  const prompt = `You are helping a teacher generate a single critical thinking discussion question for ESL students aged 12–15.
+
+Topic: "${topic}"
+Difficulty: ${currentDifficulty}
+
+${diffInstructions[currentDifficulty]}
+
+The question must be at Bloom's Evaluate level — asking students to make a judgement, give an opinion with reasons, weigh up options, or assess a situation.
+
+Requirements:
+- One question only. No introduction, no explanation, no bullet points.
+- Genuinely interesting — not a boring textbook question.
+- Should spark real opinions and possible disagreement.
+- End with a question mark.
+
+Reply with the question only.`;
+
+  try {
+    const anthropicUrl = "https://api.anthropic.com/v1/messages";
+    const proxies = [
+      `https://corsproxy.io/?${encodeURIComponent(anthropicUrl)}`,
+      `https://thingproxy.freeboard.io/fetch/${anthropicUrl}`,
+      `https://api.allorigins.win/get?url=${encodeURIComponent(anthropicUrl)}`
+    ];
+
+    const body = JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      messages: [{ role: "user", content: prompt }]
+    });
+
+    let data = null;
+    let lastError = "";
+
+    for (const proxyUrl of proxies) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        const isAllOrigins = proxyUrl.includes('allorigins');
+        const res = await fetch(proxyUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "anthropic-version": "2023-06-01" },
+          body: body,
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const raw = await res.json();
+        data = isAllOrigins ? JSON.parse(raw.contents) : raw;
+        if (data?.content?.[0]?.text) break;
+        throw new Error("No content in response");
+      } catch (err) {
+        lastError = err.message;
+        console.warn("Proxy failed:", proxyUrl, err.message);
+      }
+    }
+
+    if (!data?.content?.[0]?.text) {
+      errorMsg.textContent = "Could not reach the API. Try again in a moment. (" + lastError + ")";
+      errorMsg.style.display = "block";
+      return;
+    }
+
+    const question = data.content[0].text.trim();
+
+    document.getElementById('qLabel').textContent = diffLabels[currentDifficulty];
+    document.getElementById('questionText').textContent = question;
+    questionCard.style.display = 'block';
+    questionCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  } catch (err) {
+    errorMsg.textContent = "Network error: " + err.message;
+    errorMsg.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    btnText.textContent = 'Generate Question';
+  }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') generateQuestion(); });
+</script>
+
+</body>
+</html>
