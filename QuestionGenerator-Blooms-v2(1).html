@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Question Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Nunito+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fdf8f0;
+    --card: #ffffff;
+    --border: #e7e5e4;
+    --accent: #f97316;
+    --accent2: #8b5cf6;
+    --text: #1c1917;
+    --muted: #78716c;
+    --shadow: 0 4px 20px rgba(249,115,22,0.10);
+    --radius: 16px;
+
+    --c1: #4D96FF;
+    --c2: #10b981;
+    --c3: #f97316;
+    --c4: #8b5cf6;
+    --c5: #ef4444;
+    --c6: #f0c040;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 20px 60px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  header h1 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  header h1 span { color: var(--accent2); }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 300;
+    margin-top: 6px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 32px;
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    padding: 13px 18px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="text"]::placeholder { font-weight: 400; color: #b8b0a8; }
+  input[type="text"]:focus { border-color: var(--accent); }
+
+  button#generateBtn {
+    padding: 13px 24px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+  }
+
+  button#generateBtn:hover { background: #ea6c0a; }
+  button#generateBtn:active { transform: scale(0.97); }
+  button#generateBtn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+  .status {
+    font-size: 0.85rem;
+    color: var(--muted);
+    min-height: 20px;
+    margin-bottom: 14px;
+    font-style: italic;
+  }
+
+  /* Bloom's level pills row */
+  .levels-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+
+  .level-pill {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 100px;
+    color: white;
+    opacity: 0.35;
+    transition: opacity 0.3s;
+  }
+
+  .level-pill.active { opacity: 1; }
+
+  .pill-1 { background: var(--c1); }
+  .pill-2 { background: var(--c2); }
+  .pill-3 { background: var(--c3); }
+  .pill-4 { background: var(--c4); }
+  .pill-5 { background: var(--c5); }
+  .pill-6 { background: var(--c6); color: #1c1917; }
+
+  .questions-list {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .questions-list.visible {
+    display: flex;
+    animation: fadeUp 0.4s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .topic-heading {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+  }
+
+  .q-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    padding: 20px 22px;
+    border-left: 5px solid;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    animation: popIn 0.3s cubic-bezier(.34,1.56,.64,1) both;
+  }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.96) translateY(6px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .q-card:nth-child(2) { animation-delay: 0.05s; }
+  .q-card:nth-child(3) { animation-delay: 0.10s; }
+  .q-card:nth-child(4) { animation-delay: 0.15s; }
+  .q-card:nth-child(5) { animation-delay: 0.20s; }
+  .q-card:nth-child(6) { animation-delay: 0.25s; }
+  .q-card:nth-child(7) { animation-delay: 0.30s; }
+
+  .q-tag {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: white;
+    border-radius: 6px;
+    padding: 3px 10px;
+    margin-bottom: 10px;
+  }
+
+  .q-text {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.55;
+    color: var(--text);
+  }
+
+  /* Level colours */
+  .level-1 { border-color: var(--c1); }
+  .level-1 .q-tag { background: var(--c1); }
+
+  .level-2 { border-color: var(--c2); }
+  .level-2 .q-tag { background: var(--c2); }
+
+  .level-3 { border-color: var(--c3); }
+  .level-3 .q-tag { background: var(--c3); }
+
+  .level-4 { border-color: var(--c4); }
+  .level-4 .q-tag { background: var(--c4); }
+
+  .level-5 { border-color: var(--c5); }
+  .level-5 .q-tag { background: var(--c5); }
+
+  .level-6 { border-color: var(--c6); }
+  .level-6 .q-tag { background: var(--c6); color: #1c1917; }
+
+  .regenerate-btn {
+    margin-top: 6px;
+    padding: 10px 20px;
+    background: transparent;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    align-self: flex-start;
+  }
+
+  .regenerate-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💡 Question <span>Generator</span></h1>
+  <p>Bloom's Taxonomy questions for Grade 6 — from recall to creative thinking</p>
+</header>
+
+<div class="card">
+
+  <div class="input-row">
+    <input type="text" id="topicInput" placeholder="Enter a topic, e.g. water, friendship, the rainforest…" onkeydown="if(event.key==='Enter') generate()" />
+    <button id="generateBtn" onclick="generate()">Generate ✦</button>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <!-- Bloom's level pills — light when idle, lit when results show -->
+  <div class="levels-row" id="levelsRow">
+    <span class="level-pill pill-1">Remember</span>
+    <span class="level-pill pill-2">Understand</span>
+    <span class="level-pill pill-3">Apply</span>
+    <span class="level-pill pill-4">Analyse</span>
+    <span class="level-pill pill-5">Evaluate</span>
+    <span class="level-pill pill-6">Create</span>
+  </div>
+
+  <div class="questions-list" id="questionsList">
+    <div class="topic-heading" id="topicHeading"></div>
+    <div id="questionsContainer"></div>
+    <button class="regenerate-btn" onclick="generate()">↺ New questions on same topic</button>
+  </div>
+
+</div>
+
+<script>
+  async function generate() {
+    const topic = document.getElementById("topicInput").value.trim();
+    if (!topic) return;
+
+    const btn = document.getElementById("generateBtn");
+    const status = document.getElementById("status");
+    const list = document.getElementById("questionsList");
+    const pills = document.querySelectorAll(".level-pill");
+
+    btn.disabled = true;
+    list.classList.remove("visible");
+    pills.forEach(p => p.classList.remove("active"));
+    status.textContent = '⏳ Generating questions about "' + topic + '"…';
+
+    const prompt = `You are an EFL teacher creating discussion questions for Grade 6 students (age 12, B1 English level) about the topic: "${topic}"
+
+Generate exactly one question for each of the 6 levels of Bloom's Taxonomy.
+The language must be simple, clear, and appropriate for 12-year-old EFL learners.
+Each question should clearly reflect its Bloom's level.
+
+Respond ONLY in this exact JSON format with no extra text or markdown:
+
+{
+  "topic": "${topic}",
+  "questions": [
+    { "level": "Remember", "question": "..." },
+    { "level": "Understand", "question": "..." },
+    { "level": "Apply", "question": "..." },
+    { "level": "Analyse", "question": "..." },
+    { "level": "Evaluate", "question": "..." },
+    { "level": "Create", "question": "..." }
+  ]
+}`;
+
+    try {
+      const res = await fetch("https://claude-proxy.paulbolter.workers.dev/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 800,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+
+      const data = await res.json();
+      const text = data.content[0].text.trim();
+      const clean = text.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(clean);
+
+      document.getElementById("topicHeading").textContent = "Topic: " + parsed.topic;
+
+      const container = document.getElementById("questionsContainer");
+      container.innerHTML = "";
+
+      parsed.questions.forEach((q, i) => {
+        const div = document.createElement("div");
+        div.className = "q-card level-" + (i + 1);
+        div.innerHTML = `
+          <div class="q-tag">${i + 1}. ${q.level}</div>
+          <div class="q-text">${q.question}</div>
+        `;
+        container.appendChild(div);
+      });
+
+      list.classList.add("visible");
+      pills.forEach(p => p.classList.add("active"));
+      status.textContent = "";
+
+    } catch (err) {
+      status.textContent = "❌ Error: " + err.message;
+    }
+
+    btn.disabled = false;
+  }
+</script>
+
+</body>
+</html>
