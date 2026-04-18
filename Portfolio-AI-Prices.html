@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Comparison Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a202c;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: #2d3748;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        h1 { color: #f7fafc; text-align: center; margin-bottom: 10px; font-size: 2.5em; }
+        .subtitle { text-align: center; color: #cbd5e0; margin-bottom: 10px; font-size: 1.1em; }
+        .btc-amount { text-align: center; color: #f7931a; font-size: 1.3em; font-weight: bold; margin-bottom: 30px; }
+
+        .portfolios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .portfolio-card {
+            background: #1a202c;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .portfolio-header { text-align: center; margin-bottom: 15px; }
+        .portfolio-title { color: #e2e8f0; font-size: 1.3em; font-weight: bold; margin-bottom: 5px; }
+        .portfolio-value { color: #68d391; font-size: 2em; font-weight: bold; }
+        .portfolio-change { font-size: 0.9em; margin-top: 5px; }
+        .positive { color: #68d391; }
+        .negative { color: #fc8181; }
+
+        .chart-container { position: relative; height: 280px; margin-bottom: 20px; }
+
+        .assets-list { margin-top: 15px; }
+        .asset-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #2d3748;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        .asset-name { color: #cbd5e0; font-weight: 600; }
+        .asset-amount { color: #e2e8f0; }
+        .asset-value { color: #68d391; font-weight: bold; }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.3em;
+            color: #667eea;
+        }
+
+        .error {
+            background: #742a2a;
+            color: #feb2b2;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto 30px;
+            transition: all 0.3s ease;
+        }
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.6);
+        }
+        .refresh-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .last-updated { text-align: center; color: #718096; font-size: 0.9em; margin-bottom: 20px; }
+
+        .price-source-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        .badge-ai { background: #553c9a; color: #e9d8fd; }
+        .badge-live { background: #2f855a; color: #c6f6d5; }
+        .badge-fallback { background: #744210; color: #fefcbf; }
+
+        .status-bar {
+            background: #1a202c;
+            border-radius: 10px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 0.85em;
+            color: #a0aec0;
+        }
+        .status-item { display: flex; align-items: center; gap: 6px; }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #4a5568;
+            color: #cbd5e0;
+            font-size: 0.9em;
+        }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .loading-pulse { animation: pulse 2s infinite; }
+
+        .privacy-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #2d3748;
+            border: 2px solid #4a5568;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5em;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        .privacy-toggle:hover { background: #4a5568; transform: scale(1.1); }
+
+        .privacy-mode .portfolio-value,
+        .privacy-mode .portfolio-change,
+        .privacy-mode .asset-value { filter: blur(8px); user-select: none; }
+        .privacy-mode .portfolio-value:hover,
+        .privacy-mode .portfolio-change:hover,
+        .privacy-mode .asset-value:hover { filter: blur(0); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="privacy-toggle" onclick="togglePrivacy()" title="Toggle privacy mode">
+        <span id="privacyIcon">👁️</span>
+    </div>
+
+    <h1>📊 Portfolio Comparison Dashboard</h1>
+    <p class="subtitle">Real-time Asset Allocation Analysis</p>
+    <p class="btc-amount">Buy &amp; Hold Since Feb 12, 2026 | All Quantities Frozen</p>
+
+    <button class="refresh-btn" id="refreshBtn" onclick="fetchAllPrices()">🔄 Refresh Prices</button>
+    <div class="last-updated" id="lastUpdated">Loading...</div>
+
+    <div class="status-bar" id="statusBar" style="display:none;">
+        <span class="status-item">
+            🔷 Crypto: <span class="price-source-badge badge-live" id="cryptoStatus">Binance</span>
+        </span>
+        <span class="status-item">
+            📈 Stocks: <span class="price-source-badge badge-ai" id="stockStatus">Claude AI</span>
+        </span>
+    </div>
+
+    <div id="loadingIndicator" class="loading loading-pulse">
+        🔄 Fetching live prices...
+    </div>
+
+    <div id="portfoliosContainer" style="display: none;">
+        <div class="portfolios-grid" id="portfoliosGrid"></div>
+    </div>
+
+    <div id="errorMessage" class="error" style="display: none;">
+        ⚠️ Failed to fetch prices. Please check your connection and click Refresh.
+    </div>
+
+    <div class="footer">
+        <p><strong>Buy &amp; Hold Strategy Comparison:</strong> All portfolios purchased on Feb 12, 2026 with equal dollar value ($379,465).</p>
+        <p style="margin-top:10px;"><strong>Frozen Quantities:</strong> Asset quantities are fixed from Feb 12, 2026. Only market prices update.</p>
+        <p style="margin-top:10px;"><strong>Pie Charts:</strong> Slice sizes change as prices move — larger slice = better performing asset within that portfolio.</p>
+        <p style="margin-top:10px;"><strong>Data Sources:</strong>
+            <span class="price-source-badge badge-live">LIVE</span> Binance API (crypto &amp; gold) &nbsp;
+            <span class="price-source-badge badge-ai">AI</span> Claude via Cloudflare Proxy (stocks)
+        </p>
+    </div>
+</div>
+
+<script>
+    // ─── CONFIGURATION ────────────────────────────────────────────────────────
+    const CLOUDFLARE_PROXY = 'https://claude-proxy.paulbolter.workers.dev/';
+
+    const BTC_QUANTITY = 5.6;
+    const FROZEN_CASH_BASELINE = 379465;
+
+    const FROZEN_QUANTITIES = {
+        'BTCUSDT_crypto_mix': 1.867,
+        'ETHUSDT': 64.05,
+        'SOLUSDT': 1581.54,
+        'BTCUSDT_gold': 2.80,
+        'PAXGUSDT': 37.42,
+        'TSLA': 223.22,
+        'GOOGL': 296.46,
+        'AAPL': 341.26,
+        'NVDA': 496.63,
+        'UNIUSDT': 27901.84,
+        'AAVEUSDT': 898.38,
+        'LINKUSDT': 11318.24,
+        'MKRUSDT': 60.04,
+        'TSM': 257.79,
+        'AVGO': 276.78,
+        'NVDA_ai': 493.36,
+        'ASML': 67.43,
+        'PAXGUSDT_metals': 24.95,
+        'SLV': 1686.51,
+        'PPLT': 602.32
+    };
+
+    // Fallback prices (Feb 12, 2026 frozen prices — used if AI call fails)
+    const FALLBACK_STOCK_PRICES = {
+        'TSLA': 422.66,
+        'GOOGL': 318.89,
+        'AAPL': 277.86,
+        'NVDA': 192.28,
+        'TSM': 368.00,
+        'AVGO': 342.76,
+        'ASML': 1406.87,
+        'SLV': 75.00,
+        'PPLT': 210.00
+    };
+
+    const portfolios = [
+        {
+            id: 'btc-only', name: 'BTC Only',
+            assets: [{ symbol: 'BTCUSDT', name: 'Bitcoin', allocation: 1.0, type: 'crypto' }]
+        },
+        {
+            id: 'crypto-mix', name: 'Crypto Mix',
+            assets: [
+                { symbol: 'BTCUSDT', name: 'Bitcoin', allocation: 0.3333, type: 'crypto' },
+                { symbol: 'ETHUSDT', name: 'Ethereum', allocation: 0.3333, type: 'crypto' },
+                { symbol: 'SOLUSDT', name: 'Solana', allocation: 0.3334, type: 'crypto' }
+            ]
+        },
+        {
+            id: 'btc-gold', name: 'BTC + Gold',
+            assets: [
+                { symbol: 'BTCUSDT', name: 'Bitcoin', allocation: 0.5, type: 'crypto' },
+                { symbol: 'PAXGUSDT', name: 'Gold (PAXG)', allocation: 0.5, type: 'crypto' }
+            ]
+        },
+        {
+            id: 'tech-stocks', name: 'Tech Stocks',
+            assets: [
+                { symbol: 'TSLA', name: 'Tesla', allocation: 0.25, type: 'stock' },
+                { symbol: 'GOOGL', name: 'Alphabet', allocation: 0.25, type: 'stock' },
+                { symbol: 'AAPL', name: 'Apple', allocation: 0.25, type: 'stock' },
+                { symbol: 'NVDA', name: 'NVIDIA', allocation: 0.25, type: 'stock' }
+            ]
+        },
+        {
+            id: 'defi-tokens', name: 'DeFi Tokens',
+            assets: [
+                { symbol: 'UNIUSDT', name: 'Uniswap', allocation: 0.25, type: 'crypto' },
+                { symbol: 'AAVEUSDT', name: 'Aave', allocation: 0.25, type: 'crypto' },
+                { symbol: 'LINKUSDT', name: 'Chainlink', allocation: 0.25, type: 'crypto' },
+                { symbol: 'MKRUSDT', name: 'Maker', allocation: 0.25, type: 'crypto' }
+            ]
+        },
+        {
+            id: 'ai-infrastructure', name: 'AI Infrastructure',
+            assets: [
+                { symbol: 'TSM', name: 'TSMC', allocation: 0.25, type: 'stock' },
+                { symbol: 'AVGO', name: 'Broadcom', allocation: 0.25, type: 'stock' },
+                { symbol: 'NVDA', name: 'NVIDIA', allocation: 0.25, type: 'stock' },
+                { symbol: 'ASML', name: 'ASML', allocation: 0.25, type: 'stock' }
+            ]
+        },
+        {
+            id: 'precious-metals', name: 'Precious Metals',
+            assets: [
+                { symbol: 'PAXGUSDT', name: 'Gold (PAXG)', allocation: 0.3333, type: 'crypto' },
+                { symbol: 'SLV', name: 'Silver (SLV)', allocation: 0.3333, type: 'stock' },
+                { symbol: 'PPLT', name: 'Platinum (PPLT)', allocation: 0.3334, type: 'stock' }
+            ]
+        },
+        {
+            id: 'cash', name: '100% Cash (USD)',
+            assets: [{ symbol: 'USD', name: 'US Dollar', allocation: 1.0, type: 'cash' }]
+        }
+    ];
+
+    let portfolioCharts = {};
+    let privacyMode = localStorage.getItem('privacyMode') === 'true';
+    if (privacyMode) document.body.classList.add('privacy-mode');
+
+    function togglePrivacy() {
+        privacyMode = !privacyMode;
+        localStorage.setItem('privacyMode', privacyMode);
+        document.body.classList.toggle('privacy-mode');
+        document.getElementById('privacyIcon').textContent = privacyMode ? '🔒' : '👁️';
+    }
+
+    function formatCurrency(num) {
+        return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatPercent(num) {
+        return (num >= 0 ? '+' : '') + num.toFixed(2) + '%';
+    }
+
+    // ─── CRYPTO PRICES (Binance — direct, no CORS issues) ────────────────────
+    async function fetchCryptoPrices(symbols) {
+        const promises = symbols.map(symbol =>
+            fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`)
+                .then(r => r.json())
+        );
+        const results = await Promise.all(promises);
+        const prices = {};
+        results.forEach(r => { prices[r.symbol] = parseFloat(r.price); });
+        return prices;
+    }
+
+    // ─── STOCK PRICES (Claude AI via Cloudflare proxy) ────────────────────────
+    async function fetchStockPricesViaAI(symbols) {
+        const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        const prompt = `Today is ${today}. I need the current regular market price (in USD) for these stock/ETF ticker symbols: ${symbols.join(', ')}.
+
+Use your web search tool to find the most current prices available.
+
+Respond ONLY with a JSON object — no explanation, no markdown, no backticks. Just raw JSON.
+Format exactly like this example:
+{"TSLA": 185.50, "AAPL": 213.00}
+
+Symbols to price: ${symbols.join(', ')}`;
+
+        const response = await fetch(CLOUDFLARE_PROXY, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 500,
+                tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+                messages: [{ role: 'user', content: prompt }]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Proxy returned HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Extract text from response content blocks
+        const textBlocks = (data.content || []).filter(b => b.type === 'text');
+        if (!textBlocks.length) throw new Error('No text in AI response');
+
+        const rawText = textBlocks.map(b => b.text).join('');
+
+        // Strip markdown code fences if present
+        const clean = rawText.replace(/```json|```/g, '').trim();
+
+        // Find JSON object in the response
+        const jsonMatch = clean.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error('No JSON found in AI response: ' + rawText.substring(0, 200));
+
+        const prices = JSON.parse(jsonMatch[0]);
+
+        // Validate — each symbol should have a positive number
+        const validated = {};
+        for (const sym of symbols) {
+            const val = parseFloat(prices[sym]);
+            if (val && val > 0) {
+                validated[sym] = val;
+            } else {
+                console.warn(`AI returned invalid price for ${sym}:`, prices[sym]);
+                validated[sym] = FALLBACK_STOCK_PRICES[sym] || 100;
+            }
+        }
+
+        return validated;
+    }
+
+    // ─── MAIN FETCH FUNCTION ──────────────────────────────────────────────────
+    async function fetchAllPrices() {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const portfoliosContainer = document.getElementById('portfoliosContainer');
+        const errorMessage = document.getElementById('errorMessage');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const statusBar = document.getElementById('statusBar');
+
+        loadingIndicator.style.display = 'block';
+        loadingIndicator.textContent = '🔄 Fetching live prices...';
+        portfoliosContainer.style.display = 'none';
+        errorMessage.style.display = 'none';
+        statusBar.style.display = 'none';
+        refreshBtn.disabled = true;
+
+        try {
+            const cryptoSymbols = [...new Set(
+                portfolios.flatMap(p => p.assets)
+                    .filter(a => a.type === 'crypto')
+                    .map(a => a.symbol)
+            )];
+
+            const stockSymbols = [...new Set(
+                portfolios.flatMap(p => p.assets)
+                    .filter(a => a.type === 'stock')
+                    .map(a => a.symbol)
+            )];
+
+            // ── Step 1: Crypto from Binance ──
+            loadingIndicator.textContent = '🔷 Fetching crypto prices from Binance...';
+            const cryptoPrices = await fetchCryptoPrices(cryptoSymbols);
+
+            // ── Step 2: Stocks from Claude AI via proxy ──
+            let stockPrices = {};
+            let stockSourceLabel = 'Claude AI';
+            let stockBadgeClass = 'badge-ai';
+
+            if (stockSymbols.length > 0) {
+                loadingIndicator.textContent = '🤖 Asking Claude AI for stock prices...';
+                try {
+                    stockPrices = await fetchStockPricesViaAI(stockSymbols);
+                    console.log('AI stock prices:', stockPrices);
+                } catch (aiError) {
+                    console.error('AI stock fetch failed, using fallback prices:', aiError);
+                    stockPrices = { ...FALLBACK_STOCK_PRICES };
+                    stockSourceLabel = 'Fallback (Feb 12)';
+                    stockBadgeClass = 'badge-fallback';
+                }
+            }
+
+            const allPrices = { ...cryptoPrices, ...stockPrices, USD: 1.0 };
+
+            // Update UI
+            updatePortfolios(allPrices, FROZEN_CASH_BASELINE);
+
+            const now = new Date();
+            document.getElementById('lastUpdated').textContent = 'Last updated: ' + now.toLocaleString();
+
+            // Status bar
+            document.getElementById('stockStatus').textContent = stockSourceLabel;
+            document.getElementById('stockStatus').className = `price-source-badge ${stockBadgeClass}`;
+            statusBar.style.display = 'flex';
+
+            loadingIndicator.style.display = 'none';
+            portfoliosContainer.style.display = 'block';
+
+        } catch (error) {
+            console.error('Error fetching prices:', error);
+            loadingIndicator.style.display = 'none';
+            errorMessage.style.display = 'block';
+            errorMessage.innerHTML = `⚠️ Failed to fetch prices.<br><small>${error.message}</small><br><br>Click Refresh to try again.`;
+        } finally {
+            refreshBtn.disabled = false;
+        }
+    }
+
+    // ─── PORTFOLIO RENDERING ──────────────────────────────────────────────────
+    function updatePortfolios(prices, baseValue) {
+        const grid = document.getElementById('portfoliosGrid');
+        grid.innerHTML = '';
+        portfolios.forEach(portfolio => {
+            const card = createPortfolioCard(portfolio, prices, baseValue);
+            grid.appendChild(card);
+        });
+    }
+
+    function createPortfolioCard(portfolio, prices, baseValue) {
+        const card = document.createElement('div');
+        card.className = 'portfolio-card';
+
+        let totalValue = 0;
+        const assetData = portfolio.assets.map(asset => {
+            let price, quantity, currentValue;
+
+            if (asset.type === 'cash') {
+                price = 1.0;
+                quantity = FROZEN_CASH_BASELINE * asset.allocation;
+                currentValue = quantity;
+            } else {
+                price = prices[asset.symbol] || 0;
+                let quantityKey = asset.symbol;
+
+                if (asset.symbol === 'BTCUSDT') {
+                    if (portfolio.id === 'btc-only') quantity = BTC_QUANTITY;
+                    else if (portfolio.id === 'crypto-mix') { quantityKey = 'BTCUSDT_crypto_mix'; quantity = FROZEN_QUANTITIES[quantityKey]; }
+                    else if (portfolio.id === 'btc-gold') { quantityKey = 'BTCUSDT_gold'; quantity = FROZEN_QUANTITIES[quantityKey]; }
+                } else if (asset.symbol === 'PAXGUSDT' && portfolio.id === 'precious-metals') {
+                    quantityKey = 'PAXGUSDT_metals'; quantity = FROZEN_QUANTITIES[quantityKey];
+                } else if (asset.symbol === 'NVDA' && portfolio.id === 'ai-infrastructure') {
+                    quantityKey = 'NVDA_ai'; quantity = FROZEN_QUANTITIES[quantityKey];
+                } else {
+                    quantity = FROZEN_QUANTITIES[quantityKey] || 0;
+                }
+
+                currentValue = quantity * price;
+            }
+
+            totalValue += currentValue;
+            return { ...asset, price, quantity, currentValue };
+        });
+
+        const changeAmount = totalValue - baseValue;
+        const changePercent = (changeAmount / baseValue) * 100;
+
+        card.innerHTML = `
+            <div class="portfolio-header">
+                <div class="portfolio-title">${portfolio.name}</div>
+                <div class="portfolio-value">${formatCurrency(totalValue)}</div>
+                <div class="portfolio-change ${changeAmount >= 0 ? 'positive' : 'negative'}">
+                    ${formatCurrency(changeAmount)} (${formatPercent(changePercent)})
+                </div>
+            </div>
+            <div class="chart-container"><canvas id="chart-${portfolio.id}"></canvas></div>
+            <div class="assets-list" id="assets-${portfolio.id}"></div>
+        `;
+
+        setTimeout(() => {
+            createPieChart(portfolio.id, assetData);
+            populateAssetsList(portfolio.id, assetData);
+        }, 0);
+
+        return card;
+    }
+
+    function createPieChart(portfolioId, assetData) {
+        const ctx = document.getElementById(`chart-${portfolioId}`);
+        if (!ctx) return;
+        if (portfolioCharts[portfolioId]) portfolioCharts[portfolioId].destroy();
+
+        const colors = ['#f7931a','#627eea','#14f195','#ffd700','#e31937',
+                        '#4285f4','#555555','#76b900','#c0c0c0','#ff6b6b',
+                        '#4ecdc4','#9b59b6','#e8e8e8','#85bb65'];
+
+        portfolioCharts[portfolioId] = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: assetData.map(a => a.name),
+                datasets: [{
+                    data: assetData.map(a => a.currentValue),
+                    backgroundColor: colors.slice(0, assetData.length),
+                    borderColor: '#1a202c',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#e2e8f0', padding: 15, font: { size: 11 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label(context) {
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((a,b) => a+b, 0);
+                                return `${context.label}: ${formatCurrency(value)} (${((value/total)*100).toFixed(2)}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function populateAssetsList(portfolioId, assetData) {
+        const list = document.getElementById(`assets-${portfolioId}`);
+        if (!list) return;
+        list.innerHTML = '';
+
+        assetData.forEach(asset => {
+            const item = document.createElement('div');
+            item.className = 'asset-item';
+
+            let quantityStr, priceStr;
+            if (asset.type === 'cash') {
+                quantityStr = formatCurrency(asset.quantity);
+                priceStr = '@ $1.00';
+            } else if (asset.type === 'crypto') {
+                quantityStr = asset.quantity.toFixed(6);
+                priceStr = '@ ' + formatCurrency(asset.price);
+            } else {
+                quantityStr = asset.quantity.toFixed(4);
+                priceStr = '@ ' + formatCurrency(asset.price);
+            }
+
+            item.innerHTML = `
+                <span class="asset-name">${asset.name}</span>
+                <span class="asset-amount">${quantityStr} ${priceStr}</span>
+                <span class="asset-value">${formatCurrency(asset.currentValue)}</span>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    // ─── INIT ─────────────────────────────────────────────────────────────────
+    document.getElementById('privacyIcon').textContent = privacyMode ? '🔒' : '👁️';
+    fetchAllPrices();
+    setInterval(fetchAllPrices, 300000); // Auto-refresh every 5 minutes (AI calls are slower)
+</script>
+</body>
+</html>
