@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Comparison — March 7, 2026</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0c0f1a;
+            --bg-card: #141828;
+            --bg-card-hover: #1a2035;
+            --border: #1e2740;
+            --text-primary: #e8ecf4;
+            --text-secondary: #8892a8;
+            --text-muted: #5a6580;
+            --accent-btc: #f7931a;
+            --accent-green: #34d399;
+            --accent-red: #f87171;
+            --accent-blue: #60a5fa;
+            --accent-purple: #a78bfa;
+            --accent-teal: #2dd4bf;
+            --accent-pink: #f472b6;
+            --accent-amber: #fbbf24;
+            --glow-btc: rgba(247, 147, 26, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding: 36px 20px 28px;
+            background: linear-gradient(180deg, rgba(247,147,26,0.06) 0%, transparent 100%);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-btc), transparent);
+        }
+
+        .header h1 {
+            font-family: 'Space Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-btc));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+
+        .header .freeze-date {
+            font-family: 'Space Mono', monospace;
+            color: var(--accent-btc);
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .privacy-toggle {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .privacy-toggle:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-btc);
+            transform: scale(1.08);
+        }
+
+        .privacy-mode .portfolio-value,
+        .privacy-mode .portfolio-change,
+        .privacy-mode .asset-value,
+        .privacy-mode .total-baseline,
+        .privacy-mode .comparison-value {
+            filter: blur(10px);
+            user-select: none;
+        }
+
+        .privacy-mode .portfolio-value:hover,
+        .privacy-mode .portfolio-change:hover,
+        .privacy-mode .asset-value:hover,
+        .privacy-mode .total-baseline:hover,
+        .privacy-mode .comparison-value:hover {
+            filter: blur(0);
+            transition: filter 0.2s ease;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .refresh-btn {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 10px 28px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            border-color: var(--accent-btc);
+            box-shadow: 0 0 20px var(--glow-btc);
+            transform: translateY(-1px);
+        }
+
+        .last-updated {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 1.1em;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent-btc);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error {
+            background: rgba(248, 113, 113, 0.1);
+            color: var(--accent-red);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(248, 113, 113, 0.2);
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .comparison-bar {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 24px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+        }
+
+        .comparison-item { text-align: center; }
+
+        .comparison-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        .comparison-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .portfolios-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 900px) {
+            .portfolios-grid { grid-template-columns: 1fr; }
+        }
+
+        .portfolio-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portfolio-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent-btc)), transparent);
+        }
+
+        .portfolio-card:hover {
+            border-color: rgba(247, 147, 26, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+
+        .portfolio-header { text-align: center; margin-bottom: 16px; }
+
+        .portfolio-number {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .portfolio-title {
+            font-size: 1.15em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .portfolio-desc {
+            font-size: 0.78em;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .portfolio-value {
+            font-family: 'Space Mono', monospace;
+            color: var(--accent-green);
+            font-size: 1.7em;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .portfolio-change {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.82em;
+            margin-top: 2px;
+        }
+
+        .positive { color: var(--accent-green); }
+        .negative { color: var(--accent-red); }
+
+        .chart-container {
+            position: relative;
+            height: 220px;
+            margin: 16px 0;
+        }
+
+        .assets-list { margin-top: 12px; }
+
+        .asset-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .asset-item:hover {
+            background: rgba(255,255,255,0.04);
+            border-color: var(--border);
+        }
+
+        .asset-name {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.82em;
+        }
+
+        .asset-detail {
+            color: var(--text-muted);
+            font-size: 0.7em;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .asset-value {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 0.85em;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            line-height: 1.8;
+        }
+
+        .footer strong { color: var(--text-secondary); }
+        .total-baseline {
+            font-family: 'Space Mono', monospace;
+            color: var(--accent-btc);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="privacy-toggle" onclick="togglePrivacy()" title="Toggle privacy mode">
+                <span id="privacyIcon">👁️</span>
+            </div>
+            <h1>Portfolio Comparison</h1>
+            <p class="subtitle">BTC vs. diversifying 0.6 BTC into energy & infrastructure stocks</p>
+            <p class="freeze-date">Frozen March 7, 2026 — Buy & Hold</p>
+        </div>
+
+        <div class="controls">
+            <button class="refresh-btn" onclick="fetchAllPrices()">↻ Refresh Prices</button>
+            <span class="last-updated" id="lastUpdated">Loading...</span>
+        </div>
+
+        <div class="comparison-bar" id="comparisonBar" style="display:none;">
+            <div class="comparison-item">
+                <div class="comparison-label">BTC</div>
+                <div class="comparison-value" id="liveBtc" style="color:var(--accent-btc);">—</div>
+            </div>
+            <div class="comparison-item">
+                <div class="comparison-label">IREN</div>
+                <div class="comparison-value" id="liveIren" style="color:var(--accent-blue);">—</div>
+            </div>
+            <div class="comparison-item">
+                <div class="comparison-label">BE</div>
+                <div class="comparison-value" id="liveBe" style="color:var(--accent-purple);">—</div>
+            </div>
+            <div class="comparison-item">
+                <div class="comparison-label">CRWV</div>
+                <div class="comparison-value" id="liveCrwv" style="color:var(--accent-teal);">—</div>
+            </div>
+            <div class="comparison-item">
+                <div class="comparison-label">LITE</div>
+                <div class="comparison-value" id="liveLite" style="color:var(--accent-pink);">—</div>
+            </div>
+            <div class="comparison-item">
+                <div class="comparison-label">CORZ</div>
+                <div class="comparison-value" id="liveCorz" style="color:var(--accent-amber);">—</div>
+            </div>
+            <div class="comparison-item">
+                <div class="comparison-label">Baseline</div>
+                <div class="comparison-value total-baseline" id="baselineDisplay">—</div>
+            </div>
+        </div>
+
+        <div id="loadingIndicator" class="loading">
+            <span class="loading-spinner"></span> Fetching live prices from Binance & Yahoo Finance...
+        </div>
+
+        <div id="portfoliosContainer" style="display: none;">
+            <div class="portfolios-grid" id="portfoliosGrid"></div>
+        </div>
+
+        <div id="errorMessage" class="error" style="display: none;">
+            Failed to fetch prices. Check your connection and click Refresh.
+        </div>
+
+        <div class="footer">
+            <strong>Baseline:</strong> 5.6 BTC at March 7 prices = <span class="total-baseline" id="footerBaseline">loading...</span><br>
+            <strong>0.6 BTC stock budget:</strong> <span class="total-baseline" id="footerStockBudget">loading...</span> — split equally among selected stocks at freeze prices<br>
+            <strong>Portfolio 4</strong> compares just the stock portion ($40,822) — its % change shows how the stocks alone are doing<br>
+            <strong>Quantities frozen at purchase.</strong> Only market prices update. Auto-refreshes every 60 seconds.<br>
+            <strong>Sources:</strong> Binance + CoinGecko (BTC) · Yahoo Finance via Cloudflare proxy (stocks)
+        </div>
+    </div>
+
+    <script>
+        // =================================================================
+        // FROZEN PRICES — March 7, 2026
+        // =================================================================
+        const BTC_FREEZE  = 68036;
+        const IREN_FREEZE = 36.87;
+        const BE_FREEZE   = 159.99;
+        const CRWV_FREEZE = 74.82;
+        const LITE_FREEZE = 582.69;
+        const CORZ_FREEZE = 15.79;
+
+        // =================================================================
+        // FROZEN QUANTITIES
+        // =================================================================
+        const BASELINE     = 5.6 * BTC_FREEZE;         // ~$380,998
+        const STOCK_BUDGET = 0.6 * BTC_FREEZE;         // ~$40,822
+
+        // Portfolio 1: 100% BTC
+        const P1_BTC = 5.6;
+
+        // Portfolio 2: 5.0 BTC + 0.6 BTC split into IREN & BE (2 stocks)
+        const P2_BTC  = 5.0;
+        const P2_HALF = STOCK_BUDGET / 2;
+        const P2_IREN = P2_HALF / IREN_FREEZE;
+        const P2_BE   = P2_HALF / BE_FREEZE;
+
+        // Portfolio 3: 5.0 BTC + 0.6 BTC split into 5 stocks
+        const P3_BTC   = 5.0;
+        const P3_FIFTH = STOCK_BUDGET / 5;
+        const P3_BE    = P3_FIFTH / BE_FREEZE;
+        const P3_IREN  = P3_FIFTH / IREN_FREEZE;
+        const P3_CRWV  = P3_FIFTH / CRWV_FREEZE;
+        const P3_LITE  = P3_FIFTH / LITE_FREEZE;
+        const P3_CORZ  = P3_FIFTH / CORZ_FREEZE;
+
+        // Portfolio 4: stocks only — $40,822 split into 5 stocks (no BTC)
+        const P4_FIFTH = STOCK_BUDGET / 5;
+        const P4_BE    = P4_FIFTH / BE_FREEZE;
+        const P4_IREN  = P4_FIFTH / IREN_FREEZE;
+        const P4_CRWV  = P4_FIFTH / CRWV_FREEZE;
+        const P4_LITE  = P4_FIFTH / LITE_FREEZE;
+        const P4_CORZ  = P4_FIFTH / CORZ_FREEZE;
+
+        // =================================================================
+        // Portfolio definitions
+        // =================================================================
+        const portfolios = [
+            {
+                id: 'btc-only',
+                number: '01',
+                name: '100% Bitcoin',
+                desc: '5.6 BTC — current holding, no changes',
+                baseline: BASELINE,
+                assets: [
+                    { symbol: 'BTCUSDT', name: 'Bitcoin', qty: P1_BTC, type: 'crypto' }
+                ],
+                accent: '#f7931a'
+            },
+            {
+                id: 'btc-iren-be',
+                number: '02',
+                name: '5.0 BTC + IREN & BE',
+                desc: 'Sell 0.6 BTC → split equally into 2 stocks',
+                baseline: BASELINE,
+                assets: [
+                    { symbol: 'BTCUSDT', name: 'Bitcoin',      qty: P2_BTC,  type: 'crypto' },
+                    { symbol: 'IREN',    name: 'IREN',         qty: P2_IREN, type: 'stock' },
+                    { symbol: 'BE',      name: 'Bloom Energy', qty: P2_BE,   type: 'stock' }
+                ],
+                accent: '#60a5fa'
+            },
+            {
+                id: 'btc-five-stocks',
+                number: '03',
+                name: '5.0 BTC + 5 Stocks',
+                desc: 'Sell 0.6 BTC → split equally into BE, IREN, CRWV, LITE, CORZ',
+                baseline: BASELINE,
+                assets: [
+                    { symbol: 'BTCUSDT', name: 'Bitcoin',         qty: P3_BTC,  type: 'crypto' },
+                    { symbol: 'BE',      name: 'Bloom Energy',    qty: P3_BE,   type: 'stock' },
+                    { symbol: 'IREN',    name: 'IREN',            qty: P3_IREN, type: 'stock' },
+                    { symbol: 'CRWV',    name: 'CoreWeave',       qty: P3_CRWV, type: 'stock' },
+                    { symbol: 'LITE',    name: 'Lumentum',        qty: P3_LITE, type: 'stock' },
+                    { symbol: 'CORZ',    name: 'Core Scientific', qty: P3_CORZ, type: 'stock' }
+                ],
+                accent: '#2dd4bf'
+            },
+            {
+                id: 'stocks-only',
+                number: '04',
+                name: '5 Stocks Only ($40,822)',
+                desc: 'No BTC — equal split of 0.6 BTC value across BE, IREN, CRWV, LITE, CORZ',
+                baseline: STOCK_BUDGET,
+                assets: [
+                    { symbol: 'BE',   name: 'Bloom Energy',    qty: P4_BE,   type: 'stock' },
+                    { symbol: 'IREN', name: 'IREN',            qty: P4_IREN, type: 'stock' },
+                    { symbol: 'CRWV', name: 'CoreWeave',       qty: P4_CRWV, type: 'stock' },
+                    { symbol: 'LITE', name: 'Lumentum',        qty: P4_LITE, type: 'stock' },
+                    { symbol: 'CORZ', name: 'Core Scientific', qty: P4_CORZ, type: 'stock' }
+                ],
+                accent: '#a78bfa'
+            }
+        ];
+
+        // Consistent colors per asset across all charts
+        const ASSET_COLORS = {
+            'Bitcoin':         '#f7931a',
+            'IREN':            '#60a5fa',
+            'Bloom Energy':    '#a78bfa',
+            'CoreWeave':       '#2dd4bf',
+            'Lumentum':        '#f472b6',
+            'Core Scientific': '#fbbf24'
+        };
+
+        let portfolioCharts = {};
+        let privacyMode = false;
+
+        function togglePrivacy() {
+            privacyMode = !privacyMode;
+            document.body.classList.toggle('privacy-mode');
+            document.getElementById('privacyIcon').textContent = privacyMode ? '🔒' : '👁️';
+        }
+
+        function fmt$(n) {
+            return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        function fmtPct(n) {
+            return (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+        }
+
+        // =================================================================
+        // Price fetchers
+        // =================================================================
+
+        // Tracks which prices are live vs frozen
+        const priceStatus = {};
+
+        async function fetchBtcPrice() {
+            // Try Binance first
+            try {
+                const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+                if (!res.ok) throw new Error(`Binance HTTP ${res.status}`);
+                const data = await res.json();
+                const price = parseFloat(data.price);
+                if (price > 0) { priceStatus['BTCUSDT'] = 'live'; return price; }
+            } catch (err) { console.warn('Binance BTC failed:', err.message); }
+
+            // Try CoinGecko as backup
+            try {
+                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+                if (!res.ok) throw new Error(`CoinGecko HTTP ${res.status}`);
+                const data = await res.json();
+                const price = data?.bitcoin?.usd;
+                if (price > 0) { priceStatus['BTCUSDT'] = 'live'; return price; }
+            } catch (err) { console.warn('CoinGecko BTC failed:', err.message); }
+
+            // Frozen fallback
+            priceStatus['BTCUSDT'] = 'frozen';
+            return BTC_FREEZE;
+        }
+
+        async function fetchStockPrice(symbol) {
+            const fallback = { IREN: IREN_FREEZE, BE: BE_FREEZE, CRWV: CRWV_FREEZE, LITE: LITE_FREEZE, CORZ: CORZ_FREEZE };
+
+            // --- Cloudflare proxy (reliable, no CORS issues) ---
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 8000);
+                const res = await fetch(
+                    `https://claude-proxy.paulbolter.workers.dev/stock/${symbol}`,
+                    { signal: controller.signal }
+                );
+                clearTimeout(timeout);
+                if (!res.ok) throw new Error(`Cloudflare proxy HTTP ${res.status}`);
+                const data = await res.json();
+                if (data.price && data.price > 0) {
+                    console.log(`✅ Cloudflare proxy live price for ${symbol}: $${data.price}`);
+                    priceStatus[symbol] = 'live';
+                    return data.price;
+                }
+                throw new Error('No valid price returned');
+            } catch (err) {
+                console.warn(`Cloudflare proxy failed for ${symbol}:`, err.message);
+            }
+
+            // --- Fallback: frozen March 7 price ---
+            console.warn(`⚠️ Cloudflare proxy failed for ${symbol} — using frozen March 7 price`);
+            priceStatus[symbol] = 'frozen';
+            return fallback[symbol] || 0;
+        }
+
+        // =================================================================
+        // Main fetch & render
+        // =================================================================
+        async function fetchAllPrices() {
+            const loading = document.getElementById('loadingIndicator');
+            const container = document.getElementById('portfoliosContainer');
+            const error = document.getElementById('errorMessage');
+            const bar = document.getElementById('comparisonBar');
+
+            loading.style.display = 'block';
+            container.style.display = 'none';
+            error.style.display = 'none';
+
+            try {
+                const [btc, iren, be, crwv, lite, corz] = await Promise.all([
+                    fetchBtcPrice(),
+                    fetchStockPrice('IREN'),
+                    fetchStockPrice('BE'),
+                    fetchStockPrice('CRWV'),
+                    fetchStockPrice('LITE'),
+                    fetchStockPrice('CORZ')
+                ]);
+
+                const prices = { BTCUSDT: btc, IREN: iren, BE: be, CRWV: crwv, LITE: lite, CORZ: corz };
+
+                // Update live price bar — BTC with live/frozen badge
+                const btcBadge = priceStatus['BTCUSDT'] === 'live'
+                    ? '<span style="font-size:0.55em;color:#34d399;margin-left:3px">●LIVE</span>'
+                    : '<span style="font-size:0.55em;color:#f87171;margin-left:3px">●FROZEN</span>';
+                document.getElementById('liveBtc').innerHTML = fmt$(btc) + btcBadge;
+
+                // Show stock prices with live/frozen status badges
+                const stockInfo = [
+                    { id: 'liveIren',  sym: 'IREN',  price: iren  },
+                    { id: 'liveBe',    sym: 'BE',    price: be    },
+                    { id: 'liveCrwv',  sym: 'CRWV',  price: crwv  },
+                    { id: 'liveLite',  sym: 'LITE',  price: lite  },
+                    { id: 'liveCorz',  sym: 'CORZ',  price: corz  }
+                ];
+                stockInfo.forEach(s => {
+                    const el = document.getElementById(s.id);
+                    const isLive = priceStatus[s.sym] === 'live';
+                    const badge = isLive
+                        ? '<span style="font-size:0.55em;color:#34d399;margin-left:3px">●LIVE</span>'
+                        : '<span style="font-size:0.55em;color:#f87171;margin-left:3px;cursor:help" title="All price sources failed — showing March 7 frozen price. Press F12 → Console for details.">●FROZEN</span>';
+                    el.innerHTML = fmt$(s.price) + badge;
+                });
+                document.getElementById('baselineDisplay').textContent  = fmt$(BASELINE);
+                document.getElementById('footerBaseline').textContent   = fmt$(BASELINE);
+                document.getElementById('footerStockBudget').textContent = fmt$(STOCK_BUDGET);
+                bar.style.display = 'flex';
+
+                renderPortfolios(prices);
+
+                document.getElementById('lastUpdated').textContent =
+                    'Updated: ' + new Date().toLocaleString();
+
+                loading.style.display = 'none';
+                container.style.display = 'block';
+
+            } catch (err) {
+                console.error('Fetch error:', err);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+            }
+        }
+
+        // =================================================================
+        // Render
+        // =================================================================
+        function renderPortfolios(prices) {
+            const grid = document.getElementById('portfoliosGrid');
+            grid.innerHTML = '';
+            portfolios.forEach(p => grid.appendChild(createCard(p, prices)));
+        }
+
+        function createCard(portfolio, prices) {
+            let totalValue = 0;
+            const assetData = portfolio.assets.map(a => {
+                const price = prices[a.symbol] || 0;
+                const val = a.qty * price;
+                totalValue += val;
+                return { ...a, price, currentValue: val };
+            });
+
+            const change    = totalValue - portfolio.baseline;
+            const changePct = (change / portfolio.baseline) * 100;
+
+            const card = document.createElement('div');
+            card.className = 'portfolio-card';
+            card.style.setProperty('--card-accent', portfolio.accent);
+
+            card.innerHTML = `
+                <div class="portfolio-header">
+                    <div class="portfolio-number">Portfolio ${portfolio.number}</div>
+                    <div class="portfolio-title">${portfolio.name}</div>
+                    <div class="portfolio-desc">${portfolio.desc}</div>
+                    <div class="portfolio-value">${fmt$(totalValue)}</div>
+                    <div class="portfolio-change ${change >= 0 ? 'positive' : 'negative'}">
+                        ${change >= 0 ? '▲' : '▼'} ${fmt$(Math.abs(change))} (${fmtPct(changePct)})
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chart-${portfolio.id}"></canvas>
+                </div>
+                <div class="assets-list" id="assets-${portfolio.id}"></div>
+            `;
+
+            setTimeout(() => {
+                createPieChart(portfolio.id, assetData);
+                populateAssets(portfolio.id, assetData);
+            }, 0);
+
+            return card;
+        }
+
+        // =================================================================
+        // Doughnut chart
+        // =================================================================
+        function createPieChart(id, assetData) {
+            const ctx = document.getElementById(`chart-${id}`);
+            if (!ctx) return;
+            if (portfolioCharts[id]) portfolioCharts[id].destroy();
+
+            portfolioCharts[id] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: assetData.map(a => a.name),
+                    datasets: [{
+                        data: assetData.map(a => a.currentValue),
+                        backgroundColor: assetData.map(a => ASSET_COLORS[a.name] || '#666'),
+                        borderColor: '#141828',
+                        borderWidth: 3,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '52%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#8892a8',
+                                padding: 12,
+                                font: { family: "'DM Sans', sans-serif", size: 11 },
+                                usePointStyle: true,
+                                pointStyleWidth: 10
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e2740',
+                            titleColor: '#e8ecf4',
+                            bodyColor: '#8892a8',
+                            borderColor: '#2d3a56',
+                            borderWidth: 1,
+                            cornerRadius: 10,
+                            padding: 12,
+                            titleFont: { family: "'DM Sans', sans-serif", weight: 600 },
+                            bodyFont: { family: "'Space Mono', monospace", size: 11 },
+                            callbacks: {
+                                label: function(ctx) {
+                                    const val = ctx.parsed;
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = ((val / total) * 100).toFixed(1);
+                                    return ` ${ctx.label}: ${fmt$(val)} (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // =================================================================
+        // Asset list
+        // =================================================================
+        function populateAssets(id, assetData) {
+            const list = document.getElementById(`assets-${id}`);
+            if (!list) return;
+            list.innerHTML = '';
+
+            assetData.forEach(a => {
+                const item = document.createElement('div');
+                item.className = 'asset-item';
+
+                const qtyStr = a.type === 'crypto'
+                    ? a.qty.toFixed(4) + ' BTC'
+                    : a.qty.toFixed(2) + ' shares';
+
+                item.innerHTML = `
+                    <div>
+                        <div class="asset-name">${a.name}</div>
+                        <div class="asset-detail">${qtyStr} @ ${fmt$(a.price)}</div>
+                    </div>
+                    <div class="asset-value">${fmt$(a.currentValue)}</div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // =================================================================
+        // Init
+        // =================================================================
+        fetchAllPrices();
+        setInterval(fetchAllPrices, 60000);
+    </script>
+</body>
+</html>
