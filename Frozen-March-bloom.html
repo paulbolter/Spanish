@@ -436,7 +436,7 @@
             <strong>0.6 BTC stock budget:</strong> <span class="total-baseline" id="footerStockBudget">loading...</span> — split equally among selected stocks at freeze prices<br>
             <strong>Portfolio 4</strong> compares just the stock portion ($40,822) — its % change shows how the stocks alone are doing<br>
             <strong>Quantities frozen at purchase.</strong> Only market prices update. Auto-refreshes every 60 seconds.<br>
-            <strong>Sources:</strong> Binance + CoinGecko (BTC) · Yahoo Finance via Cloudflare proxy (stocks)
+            <strong>Sources:</strong> Binance + CoinGecko (BTC) · Yahoo Finance via Vercel proxy (stocks)
         </div>
     </div>
 
@@ -604,29 +604,29 @@
         async function fetchStockPrice(symbol) {
             const fallback = { IREN: IREN_FREEZE, BE: BE_FREEZE, CRWV: CRWV_FREEZE, LITE: LITE_FREEZE, CORZ: CORZ_FREEZE };
 
-            // --- Cloudflare proxy (reliable, no CORS issues) ---
+            // --- Vercel proxy (reliable, no CORS issues) ---
             try {
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), 8000);
                 const res = await fetch(
-                    `https://claude-proxy.paulbolter.workers.dev/stock/${symbol}`,
+                    `https://claude-proxy-zeta-six.vercel.app/api/stock?symbol=${symbol}`,
                     { signal: controller.signal }
                 );
                 clearTimeout(timeout);
-                if (!res.ok) throw new Error(`Cloudflare proxy HTTP ${res.status}`);
+                if (!res.ok) throw new Error(`Vercel proxy HTTP ${res.status}`);
                 const data = await res.json();
                 if (data.price && data.price > 0) {
-                    console.log(`✅ Cloudflare proxy live price for ${symbol}: $${data.price}`);
+                    console.log(`✅ Vercel proxy live price for ${symbol}: $${data.price}`);
                     priceStatus[symbol] = 'live';
                     return data.price;
                 }
                 throw new Error('No valid price returned');
             } catch (err) {
-                console.warn(`Cloudflare proxy failed for ${symbol}:`, err.message);
+                console.warn(`Vercel proxy failed for ${symbol}:`, err.message);
             }
 
             // --- Fallback: frozen March 7 price ---
-            console.warn(`⚠️ Cloudflare proxy failed for ${symbol} — using frozen March 7 price`);
+            console.warn(`⚠️ Vercel proxy failed for ${symbol} — using frozen March 7 price`);
             priceStatus[symbol] = 'frozen';
             return fallback[symbol] || 0;
         }
