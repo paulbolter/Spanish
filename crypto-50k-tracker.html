@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$50,000 Crypto Watch — Four Portfolios</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep:       #0d0b07;
+            --bg-card:       #16130b;
+            --border:        #2a2410;
+            --border-gold:   #6b5a1e;
+            --text-primary:  #f0e6cc;
+            --text-secondary:#a89060;
+            --text-muted:    #5a4e30;
+            --gold:          #d4a017;
+            --gold-light:    #f0c040;
+            --accent-green:  #34d399;
+            --accent-red:    #f87171;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 24px 16px;
+        }
+        body::after {
+            content: '';
+            position: fixed; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 0;
+        }
+        .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+
+        .header {
+            text-align: center; padding: 40px 24px 32px; margin-bottom: 28px;
+            background: linear-gradient(180deg, rgba(212,160,23,0.08) 0%, transparent 100%);
+            border: 1px solid var(--border-gold); border-radius: 20px;
+            position: relative; overflow: hidden;
+        }
+        .header::before {
+            content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 240px; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+        .header-badge {
+            display: inline-block; font-family: 'Space Mono', monospace;
+            font-size: 0.7rem; letter-spacing: 0.15em; color: var(--gold);
+            background: rgba(212,160,23,0.1); border: 1px solid var(--border-gold);
+            border-radius: 20px; padding: 4px 14px; margin-bottom: 14px;
+        }
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 900;
+            color: var(--gold-light); line-height: 1.1;
+        }
+        .header h1 span { color: var(--text-primary); }
+        .header .subtitle { margin-top: 8px; color: var(--text-secondary); font-size: 0.9rem; }
+        .start-date {
+            margin-top: 6px; font-family: 'Space Mono', monospace;
+            font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.08em;
+        }
+
+        .controls { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+        .refresh-btn {
+            font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.88rem;
+            padding: 9px 22px; background: transparent;
+            border: 1px solid var(--border-gold); color: var(--gold);
+            border-radius: 8px; cursor: pointer; letter-spacing: 0.04em; transition: all 0.2s;
+        }
+        .refresh-btn:hover { background: rgba(212,160,23,0.1); border-color: var(--gold); }
+        .last-updated { font-size: 0.8rem; color: var(--text-muted); font-family: 'Space Mono', monospace; }
+
+        .loading { text-align: center; padding: 60px 20px; color: var(--text-secondary); font-size: 0.9rem; }
+        .loading-spinner {
+            display: inline-block; width: 18px; height: 18px;
+            border: 2px solid var(--border-gold); border-top-color: var(--gold);
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+            margin-right: 8px; vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .winner-banner {
+            text-align: center; padding: 14px; margin-bottom: 24px;
+            border-radius: 10px; border: 1px solid var(--border-gold);
+            background: rgba(212,160,23,0.06);
+            font-family: 'Space Mono', monospace; font-size: 0.82rem;
+            color: var(--gold); letter-spacing: 0.06em; display: none;
+        }
+
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+        @media (max-width: 720px) { .comparison-grid { grid-template-columns: 1fr; } }
+
+        .portfolio-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; overflow: hidden; transition: border-color 0.2s;
+        }
+        .portfolio-card:hover { border-color: var(--border-gold); }
+        .portfolio-card.leading { border-color: var(--gold); box-shadow: 0 0 20px rgba(212,160,23,0.12); }
+
+        .card-header { padding: 20px 22px 16px; border-bottom: 1px solid var(--border); }
+        .card-number { font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 4px; }
+        .card-title { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
+        .card-desc { font-size: 0.8rem; color: var(--text-secondary); margin-top: 3px; }
+
+        .value-block {
+            padding: 18px 22px; display: flex; align-items: flex-end; gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .current-value { font-family: 'Space Mono', monospace; font-size: 1.7rem; font-weight: 700; color: var(--gold-light); line-height: 1; }
+        .value-change { font-family: 'Space Mono', monospace; font-size: 0.95rem; font-weight: 700; padding-bottom: 2px; }
+        .value-change.up   { color: var(--accent-green); }
+        .value-change.down { color: var(--accent-red); }
+
+        .chart-area { padding: 20px; display: flex; justify-content: center; }
+        .chart-area canvas { max-width: 280px; max-height: 280px; }
+
+        .holdings { padding: 0 20px 20px; }
+        .holding-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 9px 12px; border-radius: 8px; margin-bottom: 4px;
+            background: rgba(255,255,255,0.02); border: 1px solid transparent; transition: border-color 0.15s;
+        }
+        .holding-row:hover { border-color: var(--border-gold); }
+        .holding-left { display: flex; align-items: center; gap: 10px; }
+        .holding-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .holding-name { font-weight: 600; font-size: 0.88rem; }
+        .holding-qty { font-size: 0.75rem; color: var(--text-muted); font-family: 'Space Mono', monospace; }
+        .holding-right { text-align: right; }
+        .holding-value { font-family: 'Space Mono', monospace; font-size: 0.88rem; font-weight: 700; }
+        .holding-pct { font-size: 0.72rem; font-family: 'Space Mono', monospace; margin-left: 4px; }
+        .holding-price { font-size: 0.72rem; color: var(--text-muted); font-family: 'Space Mono', monospace; }
+        .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 3px; vertical-align: middle; }
+        .status-dot.live   { background: var(--accent-green); }
+        .status-dot.frozen { background: var(--accent-red); }
+
+        .section-divider {
+            text-align: center; margin: 36px 0 28px; position: relative;
+        }
+        .section-divider::before {
+            content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-gold), transparent);
+        }
+        .section-divider span {
+            position: relative; z-index: 1; background: var(--bg-deep);
+            padding: 0 18px; font-family: 'Space Mono', monospace;
+            font-size: 0.72rem; letter-spacing: 0.15em; color: var(--text-muted);
+        }
+
+        .leaderboard {
+            background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: 14px;
+            padding: 20px 24px; margin-bottom: 28px; display: none;
+        }
+        .leaderboard-title {
+            font-family: 'Space Mono', monospace; font-size: 0.7rem;
+            letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 14px;
+        }
+        .lb-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px; border-radius: 8px; margin-bottom: 4px;
+            transition: background 0.15s;
+        }
+        .lb-row:hover { background: rgba(212,160,23,0.04); }
+        .lb-row.first { background: rgba(212,160,23,0.06); border: 1px solid var(--border-gold); }
+        .lb-rank {
+            font-family: 'Space Mono', monospace; font-size: 0.8rem;
+            color: var(--text-muted); width: 28px; flex-shrink: 0;
+        }
+        .lb-row.first .lb-rank { color: var(--gold); }
+        .lb-name { font-weight: 600; font-size: 0.9rem; flex: 1; }
+        .lb-row.first .lb-name { color: var(--gold-light); }
+        .lb-val {
+            font-family: 'Space Mono', monospace; font-size: 0.88rem;
+            font-weight: 700; text-align: right; min-width: 120px;
+        }
+        .lb-pct {
+            font-family: 'Space Mono', monospace; font-size: 0.78rem;
+            font-weight: 700; text-align: right; min-width: 80px; margin-left: 10px;
+        }
+
+        .footer {
+            margin-top: 10px; padding: 20px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+            font-size: 0.78rem; color: var(--text-muted); line-height: 1.8;
+        }
+        .footer strong { color: var(--text-secondary); }
+        .error { text-align: center; padding: 20px; color: var(--accent-red); font-size: 0.88rem; display: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <div class="header-badge">CRYPTO WATCH — MAY 4, 2026</div>
+        <h1>$<span>50,000</span> — Four Ways</h1>
+        <p class="subtitle">Four portfolios, same budget — tracking from May 4, 2026</p>
+        <p class="start-date">QUANTITIES FROZEN AT START &nbsp;·&nbsp; PRICES LIVE FROM BINANCE</p>
+    </div>
+
+    <div class="controls">
+        <button class="refresh-btn" onclick="fetchAllPrices()">↻ Refresh Prices</button>
+        <span class="last-updated" id="lastUpdated">Loading...</span>
+    </div>
+
+    <div id="loadingIndicator" class="loading">
+        <span class="loading-spinner"></span> Fetching live prices from Binance…
+    </div>
+
+    <div id="mainContent" style="display:none;">
+
+        <!-- LEADERBOARD -->
+        <div class="leaderboard" id="leaderboard">
+            <div class="leaderboard-title">LEADERBOARD — BEST TO WORST</div>
+            <div id="leaderboardRows"></div>
+        </div>
+
+        <!-- ROW 1: BTC vs The Mix -->
+        <div class="comparison-grid">
+
+            <div class="portfolio-card" id="card-btc">
+                <div class="card-header">
+                    <div class="card-number">PORTFOLIO 01</div>
+                    <div class="card-title">Pure Bitcoin</div>
+                    <div class="card-desc">$50,000 → all BTC — quantities locked</div>
+                </div>
+                <div class="value-block">
+                    <div class="current-value" id="btcPortfolioValue">—</div>
+                    <div class="value-change" id="btcPortfolioChange">—</div>
+                </div>
+                <div class="chart-area">
+                    <canvas id="btcChart" width="280" height="280"></canvas>
+                </div>
+                <div class="holdings" id="btcHoldings"></div>
+            </div>
+
+            <div class="portfolio-card" id="card-mix">
+                <div class="card-header">
+                    <div class="card-number">PORTFOLIO 02</div>
+                    <div class="card-title">The Mix</div>
+                    <div class="card-desc">5 coins × $10,000 each — quantities locked</div>
+                </div>
+                <div class="value-block">
+                    <div class="current-value" id="mixPortfolioValue">—</div>
+                    <div class="value-change" id="mixPortfolioChange">—</div>
+                </div>
+                <div class="chart-area">
+                    <canvas id="mixChart" width="280" height="280"></canvas>
+                </div>
+                <div class="holdings" id="mixHoldings"></div>
+            </div>
+
+        </div>
+
+        <div class="section-divider"><span>NEW PORTFOLIOS — MAY 4, 2026</span></div>
+
+        <!-- ROW 2: Layer 1 Contenders vs Meme Squad -->
+        <div class="comparison-grid">
+
+            <div class="portfolio-card" id="card-l1">
+                <div class="card-header">
+                    <div class="card-number">PORTFOLIO 03</div>
+                    <div class="card-title">Layer 1 Contenders</div>
+                    <div class="card-desc">5 coins × $10,000 each — quantities locked</div>
+                </div>
+                <div class="value-block">
+                    <div class="current-value" id="l1PortfolioValue">—</div>
+                    <div class="value-change" id="l1PortfolioChange">—</div>
+                </div>
+                <div class="chart-area">
+                    <canvas id="l1Chart" width="280" height="280"></canvas>
+                </div>
+                <div class="holdings" id="l1Holdings"></div>
+            </div>
+
+            <div class="portfolio-card" id="card-meme">
+                <div class="card-header">
+                    <div class="card-number">PORTFOLIO 04</div>
+                    <div class="card-title">Meme Squad</div>
+                    <div class="card-desc">5 coins × $10,000 each — quantities locked</div>
+                </div>
+                <div class="value-block">
+                    <div class="current-value" id="memePortfolioValue">—</div>
+                    <div class="value-change" id="memePortfolioChange">—</div>
+                </div>
+                <div class="chart-area">
+                    <canvas id="memeChart" width="280" height="280"></canvas>
+                </div>
+                <div class="holdings" id="memeHoldings"></div>
+            </div>
+
+        </div>
+
+        <div class="footer">
+            <strong>Start date:</strong> May 4, 2026 &nbsp;·&nbsp; <strong>Budget:</strong> $50,000 per portfolio<br>
+            <strong>Portfolio 01 (Pure BTC):</strong> BTC $79,500<br>
+            <strong>Portfolio 02 (The Mix):</strong> ZEC $408 · HYPE $41.50 · TAO $284 · FARTCOIN $0.20 · BNB $623<br>
+            <strong>Portfolio 03 (Layer 1 Contenders):</strong> SUI $0.93 · DOT $1.22 · SEI $0.0587 · APT $0.97 · TRX $0.34<br>
+            <strong>Portfolio 04 (Meme Squad):</strong> DOGE $0.11 · PEPE $0.000004 · GOAT $0.018 · SHIB $0.000006 · FARTCOIN $0.20<br>
+            <strong>Quantities are permanently locked.</strong> Only live prices update. Auto-refreshes every 60 seconds.<br>
+            <strong>Source:</strong> Binance free API (no key required) · Start prices used as fallback if Binance is unavailable
+        </div>
+    </div>
+
+    <div id="errorMessage" class="error">
+        ⚠ Could not fetch prices from Binance. Check your connection and click Refresh.
+    </div>
+
+</div>
+<script>
+
+    // ─────────────────────────────────────────
+    // FROZEN START PRICES — May 4, 2026
+    // ─────────────────────────────────────────
+    const START = {
+        BTC:      79500.00,
+        ZEC:        408.00,
+        HYPE:        41.50,
+        TAO:        284.00,
+        FARTCOIN:     0.20,
+        BNB:        623.00,
+        SUI:          0.93,
+        DOT:          1.22,
+        SEI:          0.0587,
+        APT:          0.97,
+        TRX:          0.34,
+        DOGE:         0.11,
+        PEPE:         0.000004,
+        GOAT:         0.018,
+        SHIB:         0.000006
+    };
+
+    const BUDGET      = 50000;
+    const COIN_BUDGET = 10000;
+
+    // Permanently locked quantities
+    const QTY = {};
+    for (const coin in START) {
+        QTY[coin] = (coin === 'BTC') ? BUDGET / START.BTC : COIN_BUDGET / START[coin];
+    }
+
+    const SYMBOLS = {
+        BTC:      'BTCUSDT',
+        ZEC:      'ZECUSDT',
+        HYPE:     'HYPEUSDT',
+        TAO:      'TAOUSDT',
+        FARTCOIN: 'FARTCOINUSDT',
+        BNB:      'BNBUSDT',
+        SUI:      'SUIUSDT',
+        DOT:      'DOTUSDT',
+        SEI:      'SEIUSDT',
+        APT:      'APTUSDT',
+        TRX:      'TRXUSDT',
+        DOGE:     'DOGEUSDT',
+        PEPE:     'PEPEUSDT',
+        GOAT:     'GOATUSDT',
+        SHIB:     'SHIBUSDT'
+    };
+
+    const COLORS = {
+        BTC:      '#f7931a',
+        ZEC:      '#f4b728',
+        HYPE:     '#00d4ff',
+        TAO:      '#a78bfa',
+        FARTCOIN: '#22c55e',
+        BNB:      '#f3ba2f',
+        SUI:      '#4da2ff',
+        DOT:      '#e6007a',
+        SEI:      '#9b1c1c',
+        APT:      '#2dd4bf',
+        TRX:      '#ff060a',
+        DOGE:     '#c3a634',
+        PEPE:     '#3fb950',
+        GOAT:     '#f97316',
+        SHIB:     '#fca311'
+    };
+
+    const NAMES = {
+        BTC:      'Bitcoin',
+        ZEC:      'Zcash',
+        HYPE:     'Hyperliquid',
+        TAO:      'Bittensor',
+        FARTCOIN: 'Fartcoin',
+        BNB:      'BNB',
+        SUI:      'Sui',
+        DOT:      'Polkadot',
+        SEI:      'Sei',
+        APT:      'Aptos',
+        TRX:      'Tron',
+        DOGE:     'Dogecoin',
+        PEPE:     'Pepe',
+        GOAT:     'Goatseus Maximus',
+        SHIB:     'Shiba Inu'
+    };
+
+    // Portfolio groupings
+    const MIX_COINS  = ['ZEC','HYPE','TAO','FARTCOIN','BNB'];
+    const L1_COINS   = ['SUI','DOT','SEI','APT','TRX'];
+    const MEME_COINS = ['DOGE','PEPE','GOAT','SHIB','FARTCOIN'];
+
+    // All unique coins to fetch
+    const ALL_COINS = [...new Set(['BTC', ...MIX_COINS, ...L1_COINS, ...MEME_COINS])];
+
+    let charts      = {};
+    let priceStatus = {};
+
+    // ─────────────────────────────────────────
+    // FETCH ONE COIN FROM BINANCE
+    // ─────────────────────────────────────────
+    async function fetchBinancePrice(coin) {
+        const symbol = SYMBOLS[coin];
+        try {
+            const res = await fetch(
+                `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`,
+                { signal: AbortSignal.timeout(8000) }
+            );
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data  = await res.json();
+            const price = parseFloat(data.price);
+            if (price > 0) {
+                priceStatus[coin] = 'live';
+                return price;
+            }
+            throw new Error('zero price');
+        } catch (err) {
+            console.warn(`Binance ${symbol} failed:`, err.message);
+            priceStatus[coin] = 'frozen';
+            return START[coin];
+        }
+    }
+
+    // ─────────────────────────────────────────
+    // FETCH ALL PRICES
+    // ─────────────────────────────────────────
+    async function fetchAllPrices() {
+        document.getElementById('lastUpdated').textContent = 'Refreshing…';
+        const results = await Promise.all(ALL_COINS.map(c => fetchBinancePrice(c)));
+        const prices  = {};
+        ALL_COINS.forEach((c, i) => prices[c] = results[i]);
+        renderAll(prices);
+        document.getElementById('loadingIndicator').style.display = 'none';
+        document.getElementById('mainContent').style.display      = 'block';
+        const now = new Date();
+        document.getElementById('lastUpdated').textContent =
+            `Updated ${now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit'})}`;
+    }
+
+    // ─────────────────────────────────────────
+    // HELPERS
+    // ─────────────────────────────────────────
+    function fmt$(n) {
+        return '$' + n.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+    function fmtPct(n) {
+        return (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+    }
+    function fmtQty(n, coin) {
+        if (['FARTCOIN','PEPE','SHIB','DOGE','GOAT'].includes(coin) && n >= 1000) return n.toLocaleString('en-US', {maximumFractionDigits: 0});
+        if (n >= 100) return n.toFixed(2);
+        if (n >= 1)   return n.toFixed(4);
+        return n.toFixed(6);
+    }
+
+    // ─────────────────────────────────────────
+    // RENDER A SINGLE PORTFOLIO
+    // ─────────────────────────────────────────
+    function renderPortfolio(config, prices) {
+        const items = config.coins.map(c => ({
+            coin:     c,
+            price:    prices[c],
+            qty:      QTY[c],
+            startVal: config.coinBudget,
+            value:    QTY[c] * prices[c]
+        }));
+        const total  = items.reduce((s, i) => s + i.value, 0);
+        const change = ((total - BUDGET) / BUDGET) * 100;
+
+        document.getElementById(config.valueId).textContent = fmt$(total);
+        const chEl = document.getElementById(config.changeId);
+        chEl.textContent = `${fmtPct(change)}  (${fmt$(total - BUDGET)})`;
+        chEl.className   = 'value-change ' + (change >= 0 ? 'up' : 'down');
+
+        renderOrUpdateChart(
+            config.chartId,
+            items.map(i => NAMES[i.coin]),
+            items.map(i => i.value),
+            items.map(i => COLORS[i.coin]),
+            config.chartKey
+        );
+        renderHoldings(config.holdingsId, items);
+
+        return { name: config.name, total, change, cardId: config.cardId };
+    }
+
+    // ─────────────────────────────────────────
+    // RENDER ALL
+    // ─────────────────────────────────────────
+    function renderAll(prices) {
+        // BTC portfolio (special — single coin)
+        const btcValue  = QTY.BTC * prices.BTC;
+        const btcChange = ((btcValue - BUDGET) / BUDGET) * 100;
+        document.getElementById('btcPortfolioValue').textContent = fmt$(btcValue);
+        const btcEl = document.getElementById('btcPortfolioChange');
+        btcEl.textContent = `${fmtPct(btcChange)}  (${fmt$(btcValue - BUDGET)})`;
+        btcEl.className   = 'value-change ' + (btcChange >= 0 ? 'up' : 'down');
+        renderOrUpdateChart('btcChart', ['Bitcoin'], [btcValue], ['#f7931a'], 'btc');
+        renderHoldings('btcHoldings', [{
+            coin: 'BTC', price: prices.BTC, qty: QTY.BTC, startVal: BUDGET
+        }]);
+
+        const results = [
+            { name: 'Pure Bitcoin', total: btcValue, change: btcChange, cardId: 'card-btc' }
+        ];
+
+        // The Mix
+        results.push(renderPortfolio({
+            name: 'The Mix', coins: MIX_COINS, coinBudget: COIN_BUDGET,
+            valueId: 'mixPortfolioValue', changeId: 'mixPortfolioChange',
+            chartId: 'mixChart', chartKey: 'mix', holdingsId: 'mixHoldings', cardId: 'card-mix'
+        }, prices));
+
+        // Layer 1 Contenders
+        results.push(renderPortfolio({
+            name: 'Layer 1 Contenders', coins: L1_COINS, coinBudget: COIN_BUDGET,
+            valueId: 'l1PortfolioValue', changeId: 'l1PortfolioChange',
+            chartId: 'l1Chart', chartKey: 'l1', holdingsId: 'l1Holdings', cardId: 'card-l1'
+        }, prices));
+
+        // Meme Squad
+        results.push(renderPortfolio({
+            name: 'Meme Squad', coins: MEME_COINS, coinBudget: COIN_BUDGET,
+            valueId: 'memePortfolioValue', changeId: 'memePortfolioChange',
+            chartId: 'memeChart', chartKey: 'meme', holdingsId: 'memeHoldings', cardId: 'card-meme'
+        }, prices));
+
+        // Highlight leader
+        results.sort((a, b) => b.total - a.total);
+        document.querySelectorAll('.portfolio-card').forEach(c => c.classList.remove('leading'));
+        document.getElementById(results[0].cardId).classList.add('leading');
+
+        // Leaderboard
+        const lb = document.getElementById('leaderboard');
+        lb.style.display = 'block';
+        const emojis = ['🥇','🥈','🥉','4.'];
+        document.getElementById('leaderboardRows').innerHTML = results.map((r, i) => {
+            const chColor = r.change >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            return `
+            <div class="lb-row ${i === 0 ? 'first' : ''}">
+                <div class="lb-rank">${emojis[i]}</div>
+                <div class="lb-name">${r.name}</div>
+                <div class="lb-val" style="color:${i === 0 ? 'var(--gold-light)' : 'var(--text-primary)'}">${fmt$(r.total)}</div>
+                <div class="lb-pct" style="color:${chColor}">${fmtPct(r.change)}</div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderOrUpdateChart(canvasId, labels, values, colors, key) {
+        if (charts[key]) {
+            charts[key].data.datasets[0].data = values;
+            charts[key].update('none');
+            return;
+        }
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        charts[key] = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data:            values,
+                    backgroundColor: colors,
+                    borderColor:     '#0d0b07',
+                    borderWidth:     3,
+                    hoverOffset:     8
+                }]
+            },
+            options: {
+                cutout: '62%',
+                responsive: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => {
+                                const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
+                                const pct   = ((ctx.raw / total) * 100).toFixed(1);
+                                return ` ${ctx.label}: ${fmt$(ctx.raw)} (${pct}%)`;
+                            }
+                        },
+                        backgroundColor: '#1e1a10',
+                        borderColor:     '#6b5a1e',
+                        borderWidth:     1,
+                        titleColor:      '#f0e6cc',
+                        bodyColor:       '#a89060',
+                        padding:         10
+                    }
+                },
+                animation: { duration: 400 }
+            }
+        });
+    }
+
+    function renderHoldings(containerId, items) {
+        document.getElementById(containerId).innerHTML = items.map(item => {
+            const value   = item.value !== undefined ? item.value : item.qty * item.price;
+            const change  = ((value - item.startVal) / item.startVal) * 100;
+            const chColor = change >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            const status  = priceStatus[item.coin] || 'frozen';
+            return `
+            <div class="holding-row">
+                <div class="holding-left">
+                    <div class="holding-dot" style="background:${COLORS[item.coin]}"></div>
+                    <div>
+                        <div class="holding-name">${NAMES[item.coin]}</div>
+                        <div class="holding-qty">${fmtQty(item.qty, item.coin)} ${item.coin}</div>
+                    </div>
+                </div>
+                <div class="holding-right">
+                    <div class="holding-value">
+                        ${fmt$(value)}<span class="holding-pct" style="color:${chColor}">${fmtPct(change)}</span>
+                    </div>
+                    <div class="holding-price">
+                        <span class="status-dot ${status}"></span>${fmt$(item.price)}
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // ─────────────────────────────────────────
+    // INIT
+    // ─────────────────────────────────────────
+    fetchAllPrices();
+    setInterval(fetchAllPrices, 60000);
+
+</script>
+</body>
+</html>
