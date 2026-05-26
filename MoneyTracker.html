@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Money Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: linear-gradient(135deg, #0a0e1a 0%, #1a1f33 100%);
+    color: #e8e6e1;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    color: #d4af37;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    color: #9b9a96;
+    font-size: 0.95rem;
+  }
+
+  .rate-bar {
+    background: rgba(212, 175, 55, 0.08);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .rate-info {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .rate-label {
+    color: #9b9a96;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .rate-value {
+    color: #d4af37;
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+
+  .rate-note {
+    color: #6b6a66;
+    font-size: 0.8rem;
+  }
+
+  .refresh-btn {
+    background: rgba(212, 175, 55, 0.15);
+    color: #d4af37;
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .refresh-btn:hover {
+    background: rgba(212, 175, 55, 0.25);
+  }
+
+  .section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: #d4af37;
+    font-weight: 600;
+  }
+
+  .section-subtotal {
+    color: #e8e6e1;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .section-subtotal .usd {
+    color: #9b9a96;
+    font-size: 0.85rem;
+    margin-left: 6px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr auto auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .row:last-child {
+    border-bottom: none;
+  }
+
+  .label-input, .amount-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    color: #e8e6e1;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    width: 100%;
+  }
+
+  .label-input:focus, .amount-input:focus {
+    outline: none;
+    border-color: #d4af37;
+    background: rgba(0, 0, 0, 0.45);
+  }
+
+  .amount-input {
+    text-align: right;
+  }
+
+  .usd-display {
+    color: #9b9a96;
+    font-size: 0.9rem;
+    min-width: 100px;
+    text-align: right;
+    padding: 0 8px;
+  }
+
+  .delete-btn {
+    background: transparent;
+    color: #6b6a66;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+  }
+
+  .delete-btn:hover {
+    color: #ff6b6b;
+    border-color: rgba(255, 107, 107, 0.4);
+  }
+
+  .add-btn {
+    background: rgba(212, 175, 55, 0.1);
+    color: #d4af37;
+    border: 1px dashed rgba(212, 175, 55, 0.4);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: all 0.2s;
+  }
+
+  .add-btn:hover {
+    background: rgba(212, 175, 55, 0.2);
+    border-style: solid;
+  }
+
+  .totals {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+  }
+
+  .totals-label {
+    color: #9b9a96;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+
+  .total-uzs {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem;
+    color: #d4af37;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .total-usd {
+    color: #e8e6e1;
+    font-size: 1.2rem;
+    margin-top: 8px;
+  }
+
+  .actions {
+    text-align: center;
+    margin-top: 24px;
+  }
+
+  .clear-btn {
+    background: transparent;
+    color: #6b6a66;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .clear-btn:hover {
+    color: #ff6b6b;
+    border-color: rgba(255, 107, 107, 0.3);
+  }
+
+  .label-row {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr auto auto;
+    gap: 12px;
+    padding: 0 0 8px 0;
+    color: #6b6a66;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .label-row .amount-col {
+    text-align: right;
+    padding-right: 14px;
+  }
+
+  .label-row .usd-col {
+    text-align: right;
+    min-width: 100px;
+    padding: 0 8px;
+  }
+
+  .spacer {
+    width: 32px;
+  }
+
+  @media (max-width: 600px) {
+    .row, .label-row {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+    .label-row { display: none; }
+    .usd-display { text-align: left; }
+    .total-uzs { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Money Tracker</h1>
+    <div class="subtitle">UZS income tracker with live USD conversion</div>
+  </header>
+
+  <div class="rate-bar">
+    <div class="rate-info">
+      <span class="rate-label">1 USD =</span>
+      <span class="rate-value" id="rateDisplay">Loading...</span>
+      <span class="rate-note" id="rateUpdated"></span>
+    </div>
+    <button class="refresh-btn" onclick="fetchRate()">↻ Refresh rate</button>
+  </div>
+
+  <!-- JUNE 5 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">June 5</div>
+      <div class="section-subtotal">
+        <span id="juneSubtotal">0 UZS</span>
+        <span class="usd" id="juneSubtotalUsd">($0.00)</span>
+      </div>
+    </div>
+    <div class="label-row">
+      <div>Description</div>
+      <div class="amount-col">Amount (UZS)</div>
+      <div class="usd-col">USD</div>
+      <div class="spacer"></div>
+    </div>
+    <div id="juneRows"></div>
+    <button class="add-btn" onclick="addRow('june')">+ Add row</button>
+  </div>
+
+  <!-- JULY 5 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">July 5</div>
+      <div class="section-subtotal">
+        <span id="julySubtotal">0 UZS</span>
+        <span class="usd" id="julySubtotalUsd">($0.00)</span>
+      </div>
+    </div>
+    <div class="label-row">
+      <div>Description</div>
+      <div class="amount-col">Amount (UZS)</div>
+      <div class="usd-col">USD</div>
+      <div class="spacer"></div>
+    </div>
+    <div id="julyRows"></div>
+    <button class="add-btn" onclick="addRow('july')">+ Add row</button>
+  </div>
+
+  <!-- RUNNING TOTAL -->
+  <div class="totals">
+    <div class="totals-label">Running Total</div>
+    <div class="total-uzs" id="totalUzs">0 UZS</div>
+    <div class="total-usd" id="totalUsd">≈ $0.00 USD</div>
+  </div>
+
+  <div class="actions">
+    <button class="clear-btn" onclick="clearAll()">Clear all data</button>
+  </div>
+</div>
+
+<script>
+  let exchangeRate = 12600; // fallback rate, gets updated from API
+  let data = {
+    june: [{ label: 'Salary', amount: '' }, { label: 'Current amount', amount: '' }],
+    july: [{ label: 'Salary', amount: '' }, { label: 'Bonus', amount: '' }, { label: 'Other', amount: '' }]
+  };
+
+  // -- Load saved data
+  function loadData() {
+    const saved = localStorage.getItem('moneyTrackerData');
+    if (saved) {
+      try { data = JSON.parse(saved); } catch(e) {}
+    }
+    const savedRate = localStorage.getItem('moneyTrackerRate');
+    if (savedRate) exchangeRate = parseFloat(savedRate);
+  }
+
+  function saveData() {
+    localStorage.setItem('moneyTrackerData', JSON.stringify(data));
+  }
+
+  // -- Fetch exchange rate
+  async function fetchRate() {
+    document.getElementById('rateDisplay').textContent = 'Loading...';
+    try {
+      const res = await fetch('https://open.er-api.com/v6/latest/USD');
+      const json = await res.json();
+      if (json && json.rates && json.rates.UZS) {
+        exchangeRate = json.rates.UZS;
+        localStorage.setItem('moneyTrackerRate', exchangeRate);
+        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        document.getElementById('rateUpdated').textContent = '(updated ' + time + ')';
+      }
+    } catch (e) {
+      document.getElementById('rateUpdated').textContent = '(offline - using saved rate)';
+    }
+    updateDisplay();
+  }
+
+  // -- Format numbers
+  function formatUZS(n) {
+    return Math.round(n).toLocaleString('en-US').replace(/,/g, ' ') + ' UZS';
+  }
+  function formatUSD(n) {
+    return '$' + n.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+
+  // -- Render rows
+  function renderSection(section) {
+    const container = document.getElementById(section + 'Rows');
+    container.innerHTML = '';
+    data[section].forEach((row, idx) => {
+      const div = document.createElement('div');
+      div.className = 'row';
+      div.innerHTML = `
+        <input class="label-input" type="text" placeholder="Description"
+               value="${row.label.replace(/"/g, '&quot;')}"
+               oninput="updateLabel('${section}', ${idx}, this.value)">
+        <input class="amount-input" type="number" placeholder="0"
+               value="${row.amount}"
+               oninput="updateAmount('${section}', ${idx}, this.value)">
+        <div class="usd-display">${formatUSD((parseFloat(row.amount) || 0) / exchangeRate)}</div>
+        <button class="delete-btn" onclick="deleteRow('${section}', ${idx})" title="Remove row">×</button>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  function updateLabel(section, idx, val) {
+    data[section][idx].label = val;
+    saveData();
+  }
+
+  function updateAmount(section, idx, val) {
+    data[section][idx].amount = val;
+    saveData();
+    // Update just the USD display for this row without full re-render (keeps focus)
+    const rows = document.getElementById(section + 'Rows').querySelectorAll('.row');
+    if (rows[idx]) {
+      rows[idx].querySelector('.usd-display').textContent =
+        formatUSD((parseFloat(val) || 0) / exchangeRate);
+    }
+    updateTotals();
+  }
+
+  function addRow(section) {
+    data[section].push({ label: '', amount: '' });
+    saveData();
+    renderSection(section);
+    updateTotals();
+  }
+
+  function deleteRow(section, idx) {
+    data[section].splice(idx, 1);
+    saveData();
+    renderSection(section);
+    updateTotals();
+  }
+
+  function sectionTotal(section) {
+    return data[section].reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+  }
+
+  function updateTotals() {
+    const june = sectionTotal('june');
+    const july = sectionTotal('july');
+    const total = june + july;
+
+    document.getElementById('juneSubtotal').textContent = formatUZS(june);
+    document.getElementById('juneSubtotalUsd').textContent = '(' + formatUSD(june / exchangeRate) + ')';
+    document.getElementById('julySubtotal').textContent = formatUZS(july);
+    document.getElementById('julySubtotalUsd').textContent = '(' + formatUSD(july / exchangeRate) + ')';
+    document.getElementById('totalUzs').textContent = formatUZS(total);
+    document.getElementById('totalUsd').textContent = '≈ ' + formatUSD(total / exchangeRate) + ' USD';
+  }
+
+  function updateDisplay() {
+    document.getElementById('rateDisplay').textContent = formatUZS(exchangeRate);
+    renderSection('june');
+    renderSection('july');
+    updateTotals();
+  }
+
+  function clearAll() {
+    if (confirm('Clear all entered amounts? (Row labels will stay)')) {
+      ['june', 'july'].forEach(s => {
+        data[s].forEach(r => r.amount = '');
+      });
+      saveData();
+      updateDisplay();
+    }
+  }
+
+  // -- Init
+  loadData();
+  updateDisplay();
+  fetchRate();
+</script>
+</body>
+</html>
