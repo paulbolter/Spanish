@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Notebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E9E6DD;
+    --surface:#FBFAF6;
+    --ink:#232826;
+    --ink-soft:#5C615C;
+    --line:#DAD5CA;
+    --teal:#15807660;
+    --teal-solid:#157F76;
+    --teal-deep:#0F5F58;
+    --amber:#C2842B;
+    --amber-soft:#F3E6CC;
+    --danger:#A6432F;
+    --radius:12px;
+    --shadow:0 1px 2px rgba(35,40,38,.06), 0 6px 18px rgba(35,40,38,.05);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--teal-deep);}
+  button{font-family:inherit;cursor:pointer;}
+  button:focus-visible, input:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--teal-solid); outline-offset:2px;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    max-width:1100px;margin:0 auto;padding:34px 22px 10px;
+  }
+  .brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;}
+  h1{
+    font-family:'Fraunces',serif;font-weight:600;font-size:34px;
+    margin:0;letter-spacing:-.01em;
+  }
+  .brand .sub{color:var(--ink-soft);font-size:14px;}
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{
+    max-width:1100px;margin:0 auto;padding:14px 22px 6px;
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+  }
+  .search{
+    position:relative;flex:1 1 260px;min-width:200px;
+  }
+  .search input{
+    width:100%;padding:11px 14px 11px 38px;border:1px solid var(--line);
+    border-radius:999px;background:var(--surface);font-size:15px;color:var(--ink);
+  }
+  .search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);
+    width:16px;height:16px;color:var(--ink-soft);}
+  .btn{
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    padding:10px 15px;border-radius:999px;font-size:14px;font-weight:500;
+    display:inline-flex;align-items:center;gap:7px;transition:.12s;
+  }
+  .btn:hover{border-color:var(--teal-solid);color:var(--teal-deep);}
+  .btn-primary{
+    background:var(--teal-solid);border-color:var(--teal-solid);color:#fff;
+  }
+  .btn-primary:hover{background:var(--teal-deep);border-color:var(--teal-deep);color:#fff;}
+
+  /* ---------- Tag filter row ---------- */
+  .tagrow{
+    max-width:1100px;margin:0 auto;padding:4px 22px 0;
+    display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  }
+  .chip{
+    border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);
+    padding:5px 12px;border-radius:999px;font-size:13px;font-weight:500;
+  }
+  .chip.active{background:var(--amber-soft);border-color:var(--amber);color:#7a5418;}
+
+  .savednote{
+    max-width:1100px;margin:0 auto;padding:8px 22px 0;
+    font-size:12.5px;color:var(--ink-soft);
+  }
+
+  /* ---------- Board ---------- */
+  main{max-width:1100px;margin:0 auto;padding:14px 22px 60px;}
+  .board{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+    gap:18px;align-items:start;
+  }
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;position:relative;
+  }
+  .card.pinned{border-color:var(--amber);}
+  .card.pinned::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--amber);
+  }
+  .card-head{
+    display:flex;align-items:flex-start;gap:8px;padding:14px 14px 6px;
+  }
+  .card-title{
+    flex:1;font-family:'Fraunces',serif;font-weight:600;font-size:19px;
+    border:none;background:transparent;color:var(--ink);width:100%;
+    padding:2px 0;letter-spacing:-.01em;
+  }
+  .card-title::placeholder{color:#b9b4a8;font-style:italic;}
+  .iconbtn{
+    border:none;background:transparent;color:var(--ink-soft);width:30px;height:30px;
+    border-radius:8px;display:grid;place-items:center;flex:0 0 auto;transition:.12s;
+  }
+  .iconbtn:hover{background:#efece4;color:var(--ink);}
+  .iconbtn.on{color:var(--amber);}
+  .iconbtn.del:hover{color:var(--danger);}
+  .iconbtn svg{width:17px;height:17px;}
+
+  .tag-input{
+    margin:0 14px 8px;border:none;background:transparent;color:var(--teal-deep);
+    font-size:12.5px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;
+    width:calc(100% - 28px);padding:0;
+  }
+  .tag-input::placeholder{color:#bfc4bf;text-transform:none;letter-spacing:0;font-weight:500;}
+
+  .notes{
+    margin:0 14px 12px;width:calc(100% - 28px);min-height:70px;resize:vertical;
+    border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--ink);
+    font-family:'Inter',sans-serif;font-size:14px;line-height:25px;
+    background-color:#fff;
+    background-image:repeating-linear-gradient(transparent,transparent 24px,#eef0ec 24px,#eef0ec 25px);
+    background-attachment:local;
+  }
+  .notes::placeholder{color:#b9b4a8;}
+
+  .section-label{
+    font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--ink-soft);margin:2px 14px 6px;
+  }
+
+  /* links */
+  .link-row{display:flex;gap:6px;align-items:center;margin:0 14px 6px;}
+  .link-row .lbl{flex:1.1;min-width:0;}
+  .link-row .url{flex:1.6;min-width:0;}
+  .link-row input{
+    border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:13px;
+    background:#fff;color:var(--ink);width:100%;
+  }
+  .link-row .url{color:var(--teal-deep);}
+
+  /* todos */
+  .todo-row{display:flex;gap:8px;align-items:center;margin:0 14px 6px;}
+  .todo-row input[type=checkbox]{
+    width:17px;height:17px;accent-color:var(--teal-solid);flex:0 0 auto;cursor:pointer;
+  }
+  .todo-row input[type=text]{
+    flex:1;border:none;border-bottom:1px solid var(--line);background:transparent;
+    padding:5px 2px;font-size:14px;color:var(--ink);
+  }
+  .todo-row.done input[type=text]{color:#a7a99f;text-decoration:line-through;}
+
+  .add-row{display:flex;gap:8px;margin:6px 14px 14px;flex-wrap:wrap;}
+  .add-link{
+    font-size:12.5px;color:var(--ink-soft);background:transparent;border:1px dashed var(--line);
+    padding:6px 11px;border-radius:7px;display:inline-flex;align-items:center;gap:6px;
+  }
+  .add-link:hover{border-color:var(--teal-solid);color:var(--teal-deep);}
+
+  .footer-meta{
+    border-top:1px solid var(--line);margin-top:4px;padding:8px 14px;
+    font-size:11.5px;color:#a7a99f;display:flex;justify-content:space-between;
+  }
+
+  /* empty state */
+  .empty{
+    text-align:center;padding:60px 20px;color:var(--ink-soft);
+  }
+  .empty h2{font-family:'Fraunces',serif;font-weight:500;font-size:24px;color:var(--ink);margin:0 0 8px;}
+  .empty p{margin:0 auto 18px;max-width:440px;}
+  .examples{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+
+  @media(max-width:560px){
+    h1{font-size:28px;}
+    .board{grid-template-columns:1fr;}
+    .link-row{flex-wrap:wrap;}
+    .link-row .lbl,.link-row .url{flex:1 1 100%;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>Field Notebook</h1>
+    <span class="sub">notes, links & reminders — saved in this browser</span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+    <input id="search" type="text" placeholder="Search notes, links, tags…" autocomplete="off">
+  </div>
+  <button class="btn btn-primary" id="add"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New note</button>
+  <button class="btn" id="export"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg> Back up</button>
+  <button class="btn" id="import"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V9"/><path d="M7 14l5-5 5 5"/><path d="M5 3h14"/></svg> Restore</button>
+  <input type="file" id="file" accept="application/json" hidden>
+</div>
+
+<div class="tagrow" id="tagrow"></div>
+<div class="savednote" id="saved">All changes save automatically in this browser.</div>
+
+<main>
+  <div class="board" id="board"></div>
+</main>
+
+<script>
+const KEY = 'pb_notebook_v1';
+let state = { notes: [] };
+let activeTag = null;
+let search = '';
+let saveTimer = null;
+
+/* ---------- persistence ---------- */
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw){ state = JSON.parse(raw); }
+  }catch(e){ console.warn('Could not read saved notebook', e); }
+  if(!state.notes) state.notes = [];
+}
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    try{
+      localStorage.setItem(KEY, JSON.stringify(state));
+      flashSaved();
+    }catch(e){
+      document.getElementById('saved').textContent = 'Could not save — your browser storage may be full.';
+    }
+  }, 250);
+}
+function flashSaved(){
+  const el = document.getElementById('saved');
+  const t = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  el.textContent = 'Saved ' + t + ' — backups via the Back up button.';
+}
+
+/* ---------- helpers ---------- */
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function findNote(id){ return state.notes.find(n=>n.id===id); }
+function normaliseUrl(u){
+  u = (u||'').trim();
+  if(!u) return '';
+  if(!/^https?:\/\//i.test(u)) u = 'https://' + u;
+  return u;
+}
+
+function newNote(seed){
+  const n = Object.assign({
+    id: uid(), title:'', tag:'', body:'',
+    links:[], todos:[], pinned:false,
+    created: Date.now(), updated: Date.now()
+  }, seed||{});
+  state.notes.unshift(n);
+  save(); render();
+  // focus the new title
+  const el = document.querySelector(`[data-id="${n.id}"] .card-title`);
+  if(el) el.focus();
+}
+
+/* ---------- filtering ---------- */
+function visibleNotes(){
+  let list = state.notes.slice();
+  if(activeTag){
+    list = list.filter(n => (n.tag||'').toLowerCase() === activeTag.toLowerCase());
+  }
+  if(search){
+    const q = search.toLowerCase();
+    list = list.filter(n=>{
+      const hay = [n.title, n.tag, n.body,
+        ...(n.links||[]).flatMap(l=>[l.label,l.url]),
+        ...(n.todos||[]).map(t=>t.text)
+      ].join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  list.sort((a,b)=>{
+    if(a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    return b.updated - a.updated;
+  });
+  return list;
+}
+function allTags(){
+  const s = new Set();
+  state.notes.forEach(n=>{ if(n.tag && n.tag.trim()) s.add(n.tag.trim()); });
+  return [...s].sort((a,b)=>a.localeCompare(b));
+}
+
+/* ---------- icons ---------- */
+const I = {
+  pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 4h6l-1 7 3 3v1H7v-1l3-3-1-7z"/><line x1="12" y1="15" x2="12" y2="21"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/></svg>',
+  open:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>'
+};
+
+/* ---------- render ---------- */
+function render(){
+  renderTags();
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  const list = visibleNotes();
+
+  if(list.length === 0){
+    board.innerHTML = `
+      <div class="empty" style="grid-column:1/-1">
+        <h2>${state.notes.length===0 ? 'Your notebook is empty' : 'Nothing matches that'}</h2>
+        <p>${state.notes.length===0
+          ? 'Make a note for anything you want to keep handy — a topic, some reminders, and links you’ll want again.'
+          : 'Try a different search, or clear the filter above.'}</p>
+        ${state.notes.length===0 ? `<div class="examples">
+          <button class="btn" data-ex="NZ vehicle purchase">+ NZ vehicle purchase</button>
+          <button class="btn" data-ex="Accommodation">+ Accommodation</button>
+          <button class="btn" data-ex="Protein powder">+ Protein powder</button>
+        </div>` : ''}
+      </div>`;
+    board.querySelectorAll('[data-ex]').forEach(b=>{
+      b.onclick = ()=> newNote({ title: b.dataset.ex });
+    });
+    return;
+  }
+
+  list.forEach(n => board.appendChild(cardEl(n)));
+}
+
+function cardEl(n){
+  const card = document.createElement('div');
+  card.className = 'card' + (n.pinned ? ' pinned' : '');
+  card.dataset.id = n.id;
+
+  /* head */
+  const head = document.createElement('div');
+  head.className = 'card-head';
+  const title = document.createElement('input');
+  title.className = 'card-title';
+  title.placeholder = 'Note title…';
+  title.value = n.title || '';
+  title.oninput = ()=>{ n.title = title.value; n.updated = Date.now(); save(); };
+
+  const pin = document.createElement('button');
+  pin.className = 'iconbtn' + (n.pinned ? ' on' : '');
+  pin.title = n.pinned ? 'Unpin' : 'Pin to top';
+  pin.innerHTML = I.pin;
+  pin.onclick = ()=>{ n.pinned = !n.pinned; n.updated = Date.now(); save(); render(); };
+
+  const del = document.createElement('button');
+  del.className = 'iconbtn del';
+  del.title = 'Delete note';
+  del.innerHTML = I.trash;
+  del.onclick = ()=>{
+    if(confirm('Delete this note? This can’t be undone (unless you have a backup).')){
+      state.notes = state.notes.filter(x=>x.id!==n.id);
+      save(); render();
+    }
+  };
+  head.append(title, pin, del);
+  card.append(head);
+
+  /* tag */
+  const tag = document.createElement('input');
+  tag.className = 'tag-input';
+  tag.placeholder = 'add a tag (optional)';
+  tag.value = n.tag || '';
+  tag.oninput = ()=>{ n.tag = tag.value; n.updated = Date.now(); save(); };
+  tag.onblur = ()=> renderTags();
+  card.append(tag);
+
+  /* notes */
+  const notes = document.createElement('textarea');
+  notes.className = 'notes';
+  notes.placeholder = 'Ideas, reminders, anything…';
+  notes.value = n.body || '';
+  notes.oninput = ()=>{ n.body = notes.value; n.updated = Date.now(); save(); };
+  card.append(notes);
+
+  /* links */
+  if(n.links && n.links.length){
+    const lab = document.createElement('div');
+    lab.className = 'section-label'; lab.textContent = 'Links';
+    card.append(lab);
+  }
+  (n.links||[]).forEach((lnk, i)=>{
+    const row = document.createElement('div');
+    row.className = 'link-row';
+    const lbl = document.createElement('input');
+    lbl.className = 'lbl'; lbl.placeholder = 'label'; lbl.value = lnk.label||'';
+    lbl.oninput = ()=>{ lnk.label = lbl.value; n.updated=Date.now(); save(); };
+    const url = document.createElement('input');
+    url.className = 'url'; url.placeholder = 'paste link'; url.value = lnk.url||'';
+    url.oninput = ()=>{ lnk.url = url.value; n.updated=Date.now(); save(); };
+    const open = document.createElement('button');
+    open.className = 'iconbtn'; open.title = 'Open link'; open.innerHTML = I.open;
+    open.onclick = ()=>{ const u = normaliseUrl(url.value); if(u) window.open(u,'_blank','noopener'); };
+    const rm = document.createElement('button');
+    rm.className = 'iconbtn del'; rm.title = 'Remove link'; rm.innerHTML = I.x;
+    rm.onclick = ()=>{ n.links.splice(i,1); n.updated=Date.now(); save(); render(); };
+    row.append(lbl, url, open, rm);
+    card.append(row);
+  });
+
+  /* todos */
+  if(n.todos && n.todos.length){
+    const lab = document.createElement('div');
+    lab.className = 'section-label'; lab.textContent = 'Reminders';
+    card.append(lab);
+  }
+  (n.todos||[]).forEach((td, i)=>{
+    const row = document.createElement('div');
+    row.className = 'todo-row' + (td.done ? ' done' : '');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.checked = !!td.done;
+    cb.onchange = ()=>{ td.done = cb.checked; n.updated=Date.now(); save(); row.classList.toggle('done', cb.checked); };
+    const tx = document.createElement('input');
+    tx.type = 'text'; tx.placeholder = 'reminder…'; tx.value = td.text||'';
+    tx.oninput = ()=>{ td.text = tx.value; n.updated=Date.now(); save(); };
+    const rm = document.createElement('button');
+    rm.className = 'iconbtn del'; rm.title = 'Remove'; rm.innerHTML = I.x;
+    rm.onclick = ()=>{ n.todos.splice(i,1); n.updated=Date.now(); save(); render(); };
+    row.append(cb, tx, rm);
+    card.append(row);
+  });
+
+  /* add buttons */
+  const add = document.createElement('div');
+  add.className = 'add-row';
+  const addLink = document.createElement('button');
+  addLink.className = 'add-link'; addLink.textContent = '+ Link';
+  addLink.onclick = ()=>{ (n.links = n.links||[]).push({label:'',url:''}); n.updated=Date.now(); save(); render();
+    const rows = document.querySelector(`[data-id="${n.id}"]`).querySelectorAll('.link-row .lbl');
+    if(rows.length) rows[rows.length-1].focus();
+  };
+  const addTodo = document.createElement('button');
+  addTodo.className = 'add-link'; addTodo.textContent = '+ Reminder';
+  addTodo.onclick = ()=>{ (n.todos = n.todos||[]).push({text:'',done:false}); n.updated=Date.now(); save(); render();
+    const rows = document.querySelector(`[data-id="${n.id}"]`).querySelectorAll('.todo-row input[type=text]');
+    if(rows.length) rows[rows.length-1].focus();
+  };
+  add.append(addLink, addTodo);
+  card.append(add);
+
+  return card;
+}
+
+function renderTags(){
+  const row = document.getElementById('tagrow');
+  row.innerHTML = '';
+  const tags = allTags();
+  if(tags.length === 0){ row.style.display='none'; return; }
+  row.style.display='flex';
+  const all = document.createElement('button');
+  all.className = 'chip' + (activeTag===null ? ' active':'');
+  all.textContent = 'All';
+  all.onclick = ()=>{ activeTag=null; render(); };
+  row.append(all);
+  tags.forEach(t=>{
+    const c = document.createElement('button');
+    c.className = 'chip' + (activeTag && activeTag.toLowerCase()===t.toLowerCase() ? ' active':'');
+    c.textContent = t;
+    c.onclick = ()=>{ activeTag = (activeTag && activeTag.toLowerCase()===t.toLowerCase()) ? null : t; render(); };
+    row.append(c);
+  });
+}
+
+/* ---------- export / import ---------- */
+function exportData(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  const d = new Date().toISOString().slice(0,10);
+  a.href = URL.createObjectURL(blob);
+  a.download = `field-notebook-backup-${d}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!data || !Array.isArray(data.notes)) throw new Error('bad file');
+      if(state.notes.length && !confirm('Replace your current notes with this backup? Your current notes will be overwritten.')) return;
+      state = data; activeTag=null; search='';
+      document.getElementById('search').value='';
+      save(); render();
+    }catch(err){
+      alert('That file couldn’t be read as a notebook backup.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- wire up ---------- */
+document.getElementById('add').onclick = ()=> newNote();
+document.getElementById('search').oninput = e=>{ search = e.target.value.trim(); render(); };
+document.getElementById('export').onclick = exportData;
+document.getElementById('import').onclick = ()=> document.getElementById('file').click();
+document.getElementById('file').onchange = e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; };
+
+load();
+render();
+</script>
+</body>
+</html>
