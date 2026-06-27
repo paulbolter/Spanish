@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Cup Knockout — Predictions Wallchart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pitch:#0a1622;
+    --pitch-2:#0c1c2e;
+    --plate:#13273e;
+    --plate-2:#16304b;
+    --line:#274660;
+    --gold:#e9b949;
+    --gold-deep:#c4972b;
+    --ink:#eaf1fb;
+    --muted:#8aa1bd;
+    --pick-ink:#0a1622;
+    --radius:7px;
+    --card-w:158px;
+    --gap-x:46px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1100px 420px at 50% -120px, rgba(233,185,73,.10), transparent 70%),
+      linear-gradient(180deg, var(--pitch-2), var(--pitch));
+    color:var(--ink);
+    font-family:"DM Sans", system-ui, sans-serif;
+    min-height:100vh;
+  }
+
+  /* ---------- Header ---------- */
+  header.bar{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    gap:18px; flex-wrap:wrap;
+    padding:22px 28px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  .title-block h1{
+    font-family:"Playfair Display", serif;
+    font-weight:900;
+    font-size:clamp(26px,3.4vw,40px);
+    margin:0; line-height:1; letter-spacing:.5px;
+  }
+  .title-block h1 .gold{color:var(--gold);}
+  .title-block p{
+    margin:7px 0 0; color:var(--muted); font-size:14px; max-width:46ch;
+  }
+  .controls{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .saved{
+    display:inline-flex; align-items:center; gap:7px;
+    font-size:12.5px; color:var(--muted);
+    border:1px solid var(--line); border-radius:999px; padding:6px 12px;
+    transition:color .25s, border-color .25s;
+  }
+  .saved .dot{width:8px;height:8px;border-radius:50%;background:#3f6b4c;transition:background .25s, box-shadow .25s;}
+  .saved.flash{color:var(--gold);border-color:var(--gold-deep);}
+  .saved.flash .dot{background:var(--gold);box-shadow:0 0 8px var(--gold);}
+  button.btn{
+    font-family:inherit; font-size:13px; font-weight:500; cursor:pointer;
+    color:var(--ink); background:transparent;
+    border:1px solid var(--line); border-radius:999px; padding:8px 15px;
+    transition:border-color .2s, background .2s, color .2s;
+  }
+  button.btn:hover{border-color:var(--gold-deep); color:var(--gold);}
+  button.btn:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+
+  .hint{
+    padding:10px 28px 0; color:var(--muted); font-size:12.5px;
+  }
+  .hint b{color:var(--ink); font-weight:500;}
+
+  /* ---------- Board ---------- */
+  .board-scroll{
+    overflow-x:auto; overflow-y:hidden;
+    padding:18px 28px 34px;
+  }
+  .board{
+    position:relative;
+    display:flex; align-items:stretch; gap:var(--gap-x);
+    min-width:1860px;
+    height:clamp(700px, 82vh, 980px);
+    margin:0 auto;
+  }
+  svg.links{position:absolute; inset:0; z-index:0; pointer-events:none; overflow:visible;}
+  .side{display:flex; gap:var(--gap-x); position:relative; z-index:1;}
+  .col{
+    display:flex; flex-direction:column; justify-content:space-around;
+    width:var(--card-w); height:100%;
+  }
+  .col-label{
+    text-transform:uppercase; letter-spacing:.16em; font-size:10.5px; font-weight:700;
+    color:var(--muted); text-align:center; margin-bottom:6px;
+  }
+  .col-head{
+    position:absolute; top:-2px; width:var(--card-w);
+    text-transform:uppercase; letter-spacing:.16em; font-size:10.5px; font-weight:700;
+    color:var(--muted); text-align:center;
+  }
+
+  /* ---------- Match card ---------- */
+  .match{
+    background:linear-gradient(180deg, var(--plate), #112338);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    box-shadow:0 6px 16px rgba(0,0,0,.28);
+  }
+  .row{
+    display:flex; align-items:center; gap:8px;
+    padding:7px 9px;
+    cursor:pointer;
+    position:relative;
+    transition:background .15s;
+  }
+  .row + .row{border-top:1px solid rgba(39,70,96,.7);}
+  .row:hover{background:var(--plate-2);}
+  .row .flag{
+    width:22px; font-size:17px; line-height:1; text-align:center; flex:0 0 auto;
+    filter:saturate(1.05);
+  }
+  .row input{
+    flex:1 1 auto; min-width:0;
+    background:transparent; border:none; outline:none;
+    color:var(--ink); font-family:inherit; font-size:14px; font-weight:500;
+    padding:2px 0;
+    cursor:text;
+  }
+  .row input::placeholder{color:#52708e;}
+  .row .chev{
+    flex:0 0 auto; width:16px; height:16px; opacity:.32;
+    transition:opacity .15s, color .15s; color:var(--muted);
+  }
+  .row:hover .chev{opacity:.85; color:var(--gold);}
+  .side.right .row{flex-direction:row-reverse;}
+  .side.right .row input{text-align:right;}
+  .side.right .chev{transform:rotate(180deg);}
+
+  /* picked + dimmed states */
+  .row.win{
+    background:linear-gradient(180deg, var(--gold), var(--gold-deep));
+  }
+  .row.win input{color:var(--pick-ink); font-weight:700;}
+  .row.win input::placeholder{color:rgba(10,22,34,.5);}
+  .row.win .chev{opacity:0;}
+  .row.win:hover{background:linear-gradient(180deg, var(--gold), var(--gold-deep));}
+  .match.decided .row.lose{opacity:.5;}
+
+  /* ---------- Center column ---------- */
+  .center{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; width:200px; position:relative; z-index:1;
+  }
+  .center .col-label{margin:0;}
+  .match.final{width:184px;}
+  .match.bronze{width:160px;}
+  .match.bronze .row{padding:5px 9px;}
+  .match.bronze .row input{font-size:13px;}
+
+  .trophy-wrap{
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    padding:6px 4px;
+  }
+  .trophy{
+    width:62px; height:62px; color:var(--line);
+    transition:color .4s, filter .4s, transform .4s;
+  }
+  .trophy.lit{color:var(--gold); filter:drop-shadow(0 0 14px rgba(233,185,73,.55)); transform:scale(1.05);}
+  .champ{
+    display:flex; align-items:center; gap:8px;
+    border:1px solid var(--line); border-radius:var(--radius);
+    background:#0e2034; padding:7px 12px; min-width:150px; justify-content:center;
+    transition:border-color .4s, box-shadow .4s;
+  }
+  .champ.lit{border-color:var(--gold-deep); box-shadow:0 0 18px rgba(233,185,73,.22);}
+  .champ .flag{font-size:19px;}
+  .champ input{
+    background:transparent; border:none; outline:none; text-align:center;
+    color:var(--gold); font-family:"Playfair Display", serif; font-weight:700;
+    font-size:18px; width:120px;
+  }
+  .champ input::placeholder{color:#46637f; font-weight:700;}
+  .champ-label{
+    text-transform:uppercase; letter-spacing:.22em; font-size:10px; font-weight:700;
+    color:var(--gold-deep);
+  }
+
+  footer{padding:6px 28px 30px; color:var(--muted); font-size:12px; text-align:center;}
+  footer span{color:#5d7a96;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+
+  @media print{
+    body{background:#fff; color:#000; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .controls, .hint, footer{display:none;}
+    .board-scroll{overflow:visible;}
+    .board{min-width:auto;}
+    .match{box-shadow:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="title-block">
+    <h1>World Cup <span class="gold">Knockout</span></h1>
+    <p>Predict your way to the trophy. Type the 32 teams, then tap a team to send them through.</p>
+  </div>
+  <div class="controls">
+    <span class="saved" id="savedPill"><span class="dot"></span>Saved automatically</span>
+    <button class="btn" id="printBtn">Print</button>
+    <button class="btn" id="resetBtn">Clear all</button>
+  </div>
+</header>
+
+<div class="hint">
+  <b>How to use:</b> Type a team name into any outer (first-round) cell — the flag appears automatically. Tap a team to mark them the winner and move them up. Tap again to change your mind.
+</div>
+
+<div class="board-scroll">
+  <div class="board" id="board">
+    <svg class="links" id="links"></svg>
+
+    <!-- LEFT SIDE -->
+    <div class="side left" id="sideLeft">
+      <div class="col" id="L-r32-col"></div>
+      <div class="col" id="L-r16-col"></div>
+      <div class="col" id="L-qf-col"></div>
+      <div class="col" id="L-sf-col"></div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="center" id="center">
+      <div class="col-label">Final</div>
+      <div class="match final" id="C-final-card"></div>
+
+      <div class="trophy-wrap">
+        <svg class="trophy" id="trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 4h12v4a6 6 0 0 1-12 0V4Z"/>
+          <path d="M6 6H3.5a2.5 2.5 0 0 0 3 2.4"/>
+          <path d="M18 6h2.5a2.5 2.5 0 0 1-3 2.4"/>
+          <path d="M12 14v3"/>
+          <path d="M9 20h6"/>
+          <path d="M10 17h4l-.4 3h-3.2L10 17Z"/>
+        </svg>
+        <div class="champ" id="champ-card">
+          <span class="flag" id="champ-flag"></span>
+          <input id="champ-input" placeholder="Champion" aria-label="Champion">
+        </div>
+        <div class="champ-label">Champion</div>
+      </div>
+
+      <div class="col-label">Third place</div>
+      <div class="match bronze" id="C-bronze-card"></div>
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="side right" id="sideRight">
+      <div class="col" id="R-sf-col"></div>
+      <div class="col" id="R-qf-col"></div>
+      <div class="col" id="R-r16-col"></div>
+      <div class="col" id="R-r32-col"></div>
+    </div>
+  </div>
+</div>
+
+<footer>Single-file wallchart · works offline · your picks live in this browser only · <span>print to share with the class</span></footer>
+
+<script>
+/* ============================================================
+   FLAG LOOKUP  (type a name or 3-letter code -> flag emoji)
+   ============================================================ */
+const ISO = {
+  ger:'de', germany:'de', par:'py', paraguay:'py', fra:'fr', france:'fr',
+  swe:'se', sweden:'se', rsa:'za','south africa':'za', can:'ca', canada:'ca',
+  ned:'nl', netherlands:'nl', holland:'nl', mar:'ma', morocco:'ma',
+  esp:'es', spain:'es', usa:'us','united states':'us', bih:'ba', bosnia:'ba',
+  bel:'be', belgium:'be', bra:'br', brazil:'br', jpn:'jp', japan:'jp',
+  civ:'ci','ivory coast':'ci',"cote d'ivoire":'ci', nor:'no', norway:'no',
+  mex:'mx', mexico:'mx', cpv:'cv','cape verde':'cv','cabo verde':'cv',
+  aus:'au', australia:'au', egy:'eg', egypt:'eg', sui:'ch', switzerland:'ch',
+  eng:'eng', england:'eng', por:'pt', portugal:'pt', ita:'it', italy:'it',
+  cro:'hr', croatia:'hr', uru:'uy', uruguay:'uy', col:'co', colombia:'co',
+  kor:'kr','south korea':'kr', korea:'kr', sen:'sn', senegal:'sn',
+  gha:'gh', ghana:'gh', nga:'ng', nigeria:'ng', den:'dk', denmark:'dk',
+  pol:'pl', poland:'pl', srb:'rs', serbia:'rs', qat:'qa', qatar:'qa',
+  ksa:'sa','saudi arabia':'sa', irn:'ir', iran:'ir', ecu:'ec', ecuador:'ec',
+  crc:'cr','costa rica':'cr', tun:'tn', tunisia:'tn', cmr:'cm', cameroon:'cm',
+  per:'pe', peru:'pe', chi:'cl', chile:'cl', wal:'wal', wales:'wal',
+  aut:'at', austria:'at', cze:'cz', czechia:'cz','czech republic':'cz',
+  tur:'tr', turkey:'tr','türkiye':'tr','turkiye':'tr', gre:'gr', greece:'gr',
+  rus:'ru', russia:'ru', ukr:'ua', ukraine:'ua', sco:'sco', scotland:'sco',
+  nzl:'nz','new zealand':'nz', alg:'dz', algeria:'dz', pan:'pa', panama:'pa',
+  hon:'hn', honduras:'hn', jam:'jm', jamaica:'jm', ven:'ve', venezuela:'ve',
+  chn:'cn', china:'cn', ind:'in', india:'in', rou:'ro', romania:'ro',
+  hun:'hu', hungary:'hu', svn:'si', slovenia:'si', svk:'sk', slovakia:'sk',
+  fin:'fi', finland:'fi', irl:'ie', ireland:'ie', isl:'is', iceland:'is',
+  alb:'al', albania:'al', geo:'ge', georgia:'ge'
+};
+const SUBDIV = {
+  eng:'\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}',
+  sco:'\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}',
+  wal:'\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}'
+};
+function emojiFromIso(code){
+  if(SUBDIV[code]) return SUBDIV[code];
+  if(!/^[a-z]{2}$/.test(code)) return '';
+  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt(0)));
+}
+function flagFor(text){
+  const t = (text||'').trim().toLowerCase();
+  if(!t) return '';
+  if(ISO[t]) return emojiFromIso(ISO[t]);
+  if(/^[a-z]{2}$/.test(t)) return emojiFromIso(t);
+  return '';
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const STORE_KEY = 'wcKnockout.v2';
+let state = { teams:{}, winners:{} };
+try{
+  const saved = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+  if(saved && typeof saved === 'object'){
+    state.teams = saved.teams || {};
+    state.winners = saved.winners || {};
+  }
+}catch(e){ /* start fresh */ }
+
+let savedTimer;
+function save(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  const pill = document.getElementById('savedPill');
+  pill.classList.add('flash');
+  clearTimeout(savedTimer);
+  savedTimer = setTimeout(()=>pill.classList.remove('flash'), 700);
+}
+
+/* slotId = `${matchId}.${i}` ; matchId examples: L-r16-0, R-qf-1, C-final */
+function getTeam(slotId){ return state.teams[slotId] || ''; }
+function setTeam(slotId, val){
+  if(val) state.teams[slotId] = val; else delete state.teams[slotId];
+}
+
+/* where does the winner of a match go? returns {to, loseTo?} slotIds */
+function advanceTarget(matchId){
+  const [side, round, idxStr] = matchId.split('-');
+  const m = parseInt(idxStr,10);
+  if(round==='r32') return { to:`${side}-r16-${Math.floor(m/2)}.${m%2}` };
+  if(round==='r16') return { to:`${side}-qf-${Math.floor(m/2)}.${m%2}` };
+  if(round==='qf')  return { to:`${side}-sf-0.${m}` };
+  if(round==='sf'){
+    const finalSlot = side==='L' ? 0 : 1;
+    return { to:`C-final.${finalSlot}`, loseTo:`C-bronze.${finalSlot}` };
+  }
+  if(matchId==='C-final') return { to:`C-champ.0` };
+  return {};
+}
+
+/* ============================================================
+   BUILD THE CARDS
+   ============================================================ */
+const chevSVG = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+
+function makeMatch(matchId, opts={}){
+  const card = document.createElement('div');
+  card.className = 'match' + (opts.cls ? ' '+opts.cls : '');
+  card.id = matchId + '-card';
+  card.dataset.match = matchId;
+
+  for(let i=0;i<2;i++){
+    const slotId = `${matchId}.${i}`;
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.dataset.slot = i;
+
+    const flag = document.createElement('span');
+    flag.className = 'flag';
+    flag.textContent = flagFor(getTeam(slotId));
+
+    const input = document.createElement('input');
+    input.value = getTeam(slotId);
+    input.placeholder = opts.placeholder || 'Team';
+    input.setAttribute('aria-label', `${matchId} team ${i+1}`);
+    input.dataset.slotid = slotId;
+
+    // typing: don't trigger a pick, update flag + advance live if already a winner
+    ['mousedown','click'].forEach(ev => input.addEventListener(ev, e => e.stopPropagation()));
+    input.addEventListener('input', () => {
+      setTeam(slotId, input.value);
+      flag.textContent = flagFor(input.value);
+      // keep a chosen winner's copy in sync upstream
+      if(state.winners[matchId] === i) applyPick(matchId, i, {silent:true});
+      save();
+    });
+
+    row.appendChild(flag);
+    row.appendChild(input);
+    row.insertAdjacentHTML('beforeend', chevSVG);
+
+    // tap the row to pick this team
+    row.addEventListener('click', () => choosePick(matchId, i));
+
+    card.appendChild(row);
+  }
+  return card;
+}
+
+function buildSide(side){
+  const r32 = document.getElementById(`${side}-r32-col`);
+  const r16 = document.getElementById(`${side}-r16-col`);
+  const qf  = document.getElementById(`${side}-qf-col`);
+  const sf  = document.getElementById(`${side}-sf-col`);
+  for(let i=0;i<8;i++) r32.appendChild(makeMatch(`${side}-r32-${i}`, {placeholder:'Team'}));
+  for(let i=0;i<4;i++) r16.appendChild(makeMatch(`${side}-r16-${i}`, {placeholder:'Winner'}));
+  for(let i=0;i<2;i++) qf.appendChild(makeMatch(`${side}-qf-${i}`, {placeholder:'Winner'}));
+  sf.appendChild(makeMatch(`${side}-sf-0`, {placeholder:'Winner'}));
+}
+buildSide('L');
+buildSide('R');
+
+// center: final + bronze fill their pre-made card shells
+function fillCenter(){
+  const finalCard = makeMatch('C-final', {placeholder:'Finalist'});
+  document.getElementById('C-final-card').replaceWith(finalCard);
+  finalCard.id = 'C-final-card'; finalCard.classList.add('final');
+
+  const bronzeCard = makeMatch('C-bronze', {placeholder:'—'});
+  document.getElementById('C-bronze-card').replaceWith(bronzeCard);
+  bronzeCard.id = 'C-bronze-card'; bronzeCard.classList.add('bronze');
+}
+fillCenter();
+
+// champion cell (single input, no pick)
+const champInput = document.getElementById('champ-input');
+const champFlag  = document.getElementById('champ-flag');
+champInput.value = getTeam('C-champ.0');
+champFlag.textContent = flagFor(champInput.value);
+champInput.addEventListener('input', () => {
+  setTeam('C-champ.0', champInput.value);
+  champFlag.textContent = flagFor(champInput.value);
+  updateChampVisual();
+  save();
+});
+
+/* ============================================================
+   PICK LOGIC
+   ============================================================ */
+function choosePick(matchId, slotIndex){
+  if(state.winners[matchId] === slotIndex){
+    // toggle off
+    delete state.winners[matchId];
+  } else {
+    state.winners[matchId] = slotIndex;
+  }
+  applyPick(matchId, state.winners[matchId]);
+  save();
+}
+
+// push the chosen team (and the loser, for semis) into the next round
+function applyPick(matchId, slotIndex, {silent=false}={}){
+  const tgt = advanceTarget(matchId);
+  if(slotIndex === undefined){
+    // pick cleared -> clear what we advanced
+    if(tgt.to) setSlotValue(tgt.to, '');
+    if(tgt.loseTo) setSlotValue(tgt.loseTo, '');
+    if(matchId==='C-final'){ setTeam('C-champ.0',''); syncChamp(); }
+  } else {
+    const winName  = getTeam(`${matchId}.${slotIndex}`);
+    const loseName = getTeam(`${matchId}.${1-slotIndex}`);
+    if(tgt.to) setSlotValue(tgt.to, winName);
+    if(tgt.loseTo) setSlotValue(tgt.loseTo, loseName);
+    if(matchId==='C-final'){ setTeam('C-champ.0', winName); syncChamp(); }
+  }
+  if(!silent) refreshAll();
+}
+
+// write a value into a slot's input + state + flag
+function setSlotValue(slotId, val){
+  setTeam(slotId, val);
+  const input = document.querySelector(`input[data-slotid="${slotId}"]`);
+  if(input){
+    input.value = val;
+    const flag = input.parentElement.querySelector('.flag');
+    if(flag) flag.textContent = flagFor(val);
+    // if that slot was itself already chosen as a winner, cascade
+    const m = slotId.split('.')[0], si = parseInt(slotId.split('.')[1],10);
+    if(state.winners[m] === si) applyPick(m, si, {silent:true});
+  }
+}
+function syncChamp(){
+  champInput.value = getTeam('C-champ.0');
+  champFlag.textContent = flagFor(champInput.value);
+}
+
+/* ============================================================
+   VISUAL REFRESH (win / lose highlighting + champion glow)
+   ============================================================ */
+function refreshAll(){
+  document.querySelectorAll('.match').forEach(card => {
+    const matchId = card.id.replace('-card','');
+    const w = state.winners[matchId];
+    const rows = card.querySelectorAll('.row');
+    card.classList.toggle('decided', w !== undefined);
+    rows.forEach((r,i) => {
+      r.classList.toggle('win', w === i);
+      r.classList.toggle('lose', w !== undefined && w !== i);
+    });
+  });
+  updateChampVisual();
+  drawLinks();
+}
+function updateChampVisual(){
+  const has = !!getTeam('C-champ.0').trim();
+  document.getElementById('trophy').classList.toggle('lit', has);
+  document.getElementById('champ-card').classList.toggle('lit', has);
+}
+
+/* ============================================================
+   CONNECTOR LINES (measured + drawn as SVG elbows)
+   ============================================================ */
+const board = document.getElementById('board');
+const links = document.getElementById('links');
+
+function pt(id, edge){
+  const el = document.getElementById(id);
+  if(!el) return null;
+  const r = el.getBoundingClientRect();
+  const b = board.getBoundingClientRect();
+  const x = (edge==='right' ? r.right : edge==='left' ? r.left : (r.left+r.right)/2)
+            - b.left + board.scrollLeft;
+  const y = (edge==='top' ? r.top : edge==='bottom' ? r.bottom : (r.top+r.bottom)/2)
+            - b.top + board.scrollTop;
+  return {x,y};
+}
+function elbow(a,b){
+  if(!a||!b) return '';
+  const mx = (a.x+b.x)/2;
+  return `M ${a.x} ${a.y} H ${mx} V ${b.y} H ${b.x}`;
+}
+function vElbow(a,b){
+  if(!a||!b) return '';
+  const my = (a.y+b.y)/2;
+  return `M ${a.x} ${a.y} V ${my} H ${b.x} V ${b.y}`;
+}
+
+function drawLinks(){
+  const segs = [];
+  // left side: child right edge -> parent left edge
+  for(let m=0;m<8;m++) segs.push(elbow(pt(`L-r32-${m}-card`,'right'), pt(`L-r16-${Math.floor(m/2)}-card`,'left')));
+  for(let m=0;m<4;m++) segs.push(elbow(pt(`L-r16-${m}-card`,'right'), pt(`L-qf-${Math.floor(m/2)}-card`,'left')));
+  for(let m=0;m<2;m++) segs.push(elbow(pt(`L-qf-${m}-card`,'right'), pt(`L-sf-0-card`,'left')));
+  segs.push(elbow(pt('L-sf-0-card','right'), pt('C-final-card','left')));
+  // right side: child left edge -> parent right edge
+  for(let m=0;m<8;m++) segs.push(elbow(pt(`R-r32-${m}-card`,'left'), pt(`R-r16-${Math.floor(m/2)}-card`,'right')));
+  for(let m=0;m<4;m++) segs.push(elbow(pt(`R-r16-${m}-card`,'left'), pt(`R-qf-${Math.floor(m/2)}-card`,'right')));
+  for(let m=0;m<2;m++) segs.push(elbow(pt(`R-qf-${m}-card`,'left'), pt(`R-sf-0-card`,'right')));
+  segs.push(elbow(pt('R-sf-0-card','left'), pt('C-final-card','right')));
+  // final -> champion
+  segs.push(vElbow(pt('C-final-card','bottom'), pt('champ-card','top')));
+
+  links.setAttribute('width', board.scrollWidth);
+  links.setAttribute('height', board.scrollHeight);
+  links.innerHTML = segs.filter(Boolean)
+    .map(d => `<path d="${d}" fill="none" stroke="#274660" stroke-width="1.6"/>`)
+    .join('');
+}
+
+/* ============================================================
+   CONTROLS
+   ============================================================ */
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if(!confirm('Clear all teams and picks? This cannot be undone.')) return;
+  state = { teams:{}, winners:{} };
+  document.querySelectorAll('.row input, #champ-input').forEach(inp => {
+    inp.value = '';
+    const f = inp.parentElement.querySelector('.flag'); if(f) f.textContent='';
+  });
+  save();
+  refreshAll();
+});
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init(){
+  refreshAll();
+}
+window.addEventListener('load', () => { init(); drawLinks(); setTimeout(drawLinks,300); });
+window.addEventListener('resize', drawLinks);
+board.addEventListener('scroll', drawLinks);
+if(window.ResizeObserver){ new ResizeObserver(drawLinks).observe(board); }
+init();
+</script>
+</body>
+</html>
