@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Available — NZD</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0f11;
+    --surface: #16181c;
+    --border: #23262d;
+    --muted: #3a3f4a;
+    --text: #e8eaf0;
+    --subtext: #7a8090;
+    --green: #3dd68c;
+    --blue: #4a9eff;
+    --red: #ff5c5c;
+    --btc: #f7931a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding: 32px 24px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 28px;
+  }
+
+  .header-title {
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--subtext);
+    margin-bottom: 4px;
+  }
+
+  .header-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(61, 214, 140, 0.08);
+    border: 1px solid rgba(61, 214, 140, 0.2);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .save-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .save-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(61, 214, 140, 0.1);
+    border: 1px solid rgba(61, 214, 140, 0.3);
+    color: var(--green);
+    padding: 7px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .save-btn:hover { background: rgba(61, 214, 140, 0.2); }
+
+  .save-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    transition: color 0.4s;
+  }
+
+  .save-status.flash { color: var(--green); }
+
+  .asset-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: opacity 0.2s, border-color 0.2s;
+  }
+
+  .asset-card.excluded { opacity: 0.5; }
+  .asset-card.included { border-color: rgba(61, 214, 140, 0.26); }
+
+  .asset-card.btc::before {
+    content: '₿';
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 112px;
+    color: rgba(247, 147, 26, 0.04);
+    font-weight: bold;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .asset-card.mstr::before {
+    content: 'MSTR';
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'DM Mono', monospace;
+    font-size: 42px;
+    color: rgba(74, 158, 255, 0.04);
+    font-weight: 500;
+    pointer-events: none;
+  }
+
+  .asset-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .asset-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--subtext);
+    margin-bottom: 6px;
+  }
+
+  .asset-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 17px;
+    color: var(--text);
+  }
+
+  .asset-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 5px;
+  }
+
+  .values {
+    text-align: right;
+    position: relative;
+    z-index: 1;
+    min-width: 210px;
+  }
+
+  .value-nzd {
+    font-family: 'DM Mono', monospace;
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--green);
+    letter-spacing: -0.02em;
+  }
+
+  .value-usd {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    color: var(--subtext);
+    margin-top: 5px;
+  }
+
+  .include-control {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--subtext);
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    z-index: 2;
+  }
+
+  .include-control input {
+    appearance: none;
+    width: 17px;
+    height: 17px;
+    border: 1px solid var(--muted);
+    border-radius: 4px;
+    background: #111317;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+
+  .include-control input:checked {
+    background: rgba(61, 214, 140, 0.18);
+    border-color: var(--green);
+  }
+
+  .include-control input:checked::after {
+    content: '✓';
+    color: var(--green);
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .editable-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .currency-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .editable-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 24px;
+    color: var(--green);
+    background: none;
+    border: none;
+    outline: none;
+    text-align: right;
+    width: 145px;
+    cursor: pointer;
+    border-bottom: 1px dashed transparent;
+    transition: border-color 0.2s, background 0.2s;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
+  .editable-value:hover { border-bottom-color: var(--muted); }
+  .editable-value:focus {
+    background: rgba(74, 158, 255, 0.08);
+    border-bottom-color: var(--blue);
+    color: var(--blue);
+  }
+
+  .total-bar {
+    background: linear-gradient(135deg, #1a1d24, #1e2128);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 26px 32px;
+    text-align: center;
+    margin-top: 22px;
+  }
+
+  .total-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--subtext);
+    margin-bottom: 8px;
+  }
+
+  .total-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 38px;
+    font-weight: 500;
+    color: var(--green);
+  }
+
+  .total-usd {
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    color: var(--subtext);
+    margin-top: 6px;
+  }
+
+  .mix-summary {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 14px;
+    line-height: 1.5;
+  }
+
+  .section-note {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin: 5px 0 12px;
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 700px) {
+    body { padding: 24px 16px; }
+    .asset-head { flex-direction: column; }
+    .values { text-align: left; min-width: 0; width: 100%; }
+    .editable-row, .include-control { justify-content: flex-start; }
+    .value-nzd { font-size: 25px; }
+    .total-value { font-size: 31px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">Available — NZD</div>
+    <div class="header-date" id="dateDisplay">—</div>
+  </div>
+  <div class="live-badge">
+    <div class="live-dot"></div>
+    Live prices
+  </div>
+</div>
+
+<div class="save-bar">
+  <span class="save-status" id="saveStatus">—</span>
+  <button class="save-btn" onclick="saveData()">💾 Save Data</button>
+</div>
+
+<!-- 0.6 BTC -->
+<div class="asset-card btc" id="card-btc06">
+  <div class="asset-head">
+    <div>
+      <div class="asset-label">Bitcoin holding</div>
+      <div class="asset-name">0.6 BTC</div>
+      <div class="asset-sub" id="btcPriceLine06">fetching live price…</div>
+    </div>
+    <div class="values">
+      <div class="value-nzd" id="btc06Nzd">NZ$—</div>
+      <div class="value-usd" id="btc06Usd">US$—</div>
+      <label class="include-control">
+        <input type="checkbox" class="include-box" id="includeBtc06" checked>
+        Include in total
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- NZD Visa -->
+<div class="asset-card" id="card-visa">
+  <div class="asset-head">
+    <div>
+      <div class="asset-label">NZD account</div>
+      <div class="asset-name">Visa card</div>
+      <div class="asset-sub">click amount to edit</div>
+    </div>
+    <div class="values">
+      <div class="editable-row">
+        <span class="currency-tag">NZ$</span>
+        <input class="editable-value" id="visaAmount" value="16473" inputmode="decimal" title="NZD Visa amount">
+      </div>
+      <div class="value-usd" id="visaUsd">US$—</div>
+      <label class="include-control">
+        <input type="checkbox" class="include-box" id="includeVisa" checked>
+        Include in total
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- NZD Cash -->
+<div class="asset-card" id="card-cash">
+  <div class="asset-head">
+    <div>
+      <div class="asset-label">NZD account</div>
+      <div class="asset-name">Cash</div>
+      <div class="asset-sub">click amount to edit</div>
+    </div>
+    <div class="values">
+      <div class="editable-row">
+        <span class="currency-tag">NZ$</span>
+        <input class="editable-value" id="cashAmount" value="177" inputmode="decimal" title="NZD Cash amount">
+      </div>
+      <div class="value-usd" id="cashUsd">US$—</div>
+      <label class="include-control">
+        <input type="checkbox" class="include-box" id="includeCash" checked>
+        Include in total
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- MSTR -->
+<div class="asset-card mstr" id="card-mstr">
+  <div class="asset-head">
+    <div>
+      <div class="asset-label">MicroStrategy stock</div>
+      <div class="asset-name">11 MSTR shares</div>
+      <div class="asset-sub">11 shares · enter current USD share price</div>
+      <div class="input-row" style="margin-top:10px;">
+        <span class="input-prefix">US$</span>
+        <input class="editable-value" id="mstrPriceInput" value="0" inputmode="decimal" title="Current MSTR price per share in USD">
+        <span class="input-suffix">per share</span>
+      </div>
+    </div>
+    <div class="values">
+      <div class="value-nzd" id="mstrNzd">NZ$—</div>
+      <div class="value-usd" id="mstrUsd">US$—</div>
+      <label class="include-control">
+        <input type="checkbox" class="include-box" id="includeMstr" checked>
+        Include in total
+      </label>
+    </div>
+  </div>
+</div>
+
+<div class="section-note">Long-term holding — excluded by default</div>
+
+<!-- 5 BTC last, unchecked -->
+<div class="asset-card btc" id="card-btc5">
+  <div class="asset-head">
+    <div>
+      <div class="asset-label">Bitcoin holding</div>
+      <div class="asset-name">5.0 BTC</div>
+      <div class="asset-sub" id="btcPriceLine5">fetching live price…</div>
+    </div>
+    <div class="values">
+      <div class="value-nzd" id="btc5Nzd">NZ$—</div>
+      <div class="value-usd" id="btc5Usd">US$—</div>
+      <label class="include-control">
+        <input type="checkbox" class="include-box" id="includeBtc5">
+        Include in total
+      </label>
+    </div>
+  </div>
+</div>
+
+<div class="total-bar">
+  <div class="total-label">Included assets — total value</div>
+  <div class="total-value" id="totalNzd">NZ$—</div>
+  <div class="total-usd" id="totalUsd">US$—</div>
+  <div class="mix-summary" id="mixSummary">—</div>
+</div>
+
+<div class="footer" id="lastUpdated">BTC updates live. MSTR price is entered manually.</div>
+
+<script>
+let btcUsd = 0;
+let btcNzd = 0;
+let usdToNzd = 0;
+
+const BTC_06 = 0.6;
+const BTC_5 = 5.0;
+const MSTR_SHARES = 11;
+const SAVE_KEY = 'available_nzd_asset_mixer_v2';
+
+function getVal(id) {
+  const el = document.getElementById(id);
+  return parseFloat(String(el.value).replace(/,/g, '')) || 0;
+}
+
+function fmtNzd(n) {
+  return 'NZ$' + Math.round(n).toLocaleString('en-NZ');
+}
+
+function fmtUsd(n) {
+  return 'US$' + Math.round(n).toLocaleString('en-US');
+}
+
+function setCardState(cardId, checked) {
+  const card = document.getElementById(cardId);
+  card.classList.toggle('included', checked);
+  card.classList.toggle('excluded', !checked);
+}
+
+function recalculate() {
+  const visaNzd = getVal('visaAmount');
+  const cashNzd = getVal('cashAmount');
+  const nzdToUsd = usdToNzd > 0 ? 1 / usdToNzd : 0;
+
+  const btc06Usd = BTC_06 * btcUsd;
+  const btc06Nzd = BTC_06 * btcNzd;
+  const btc5Usd = BTC_5 * btcUsd;
+  const btc5Nzd = BTC_5 * btcNzd;
+  const mstrPriceUsd = getVal('mstrPriceInput');
+  const mstrUsd = MSTR_SHARES * mstrPriceUsd;
+  const mstrNzd = mstrUsd * usdToNzd;
+
+  document.getElementById('btc06Nzd').textContent = fmtNzd(btc06Nzd);
+  document.getElementById('btc06Usd').textContent = fmtUsd(btc06Usd);
+  document.getElementById('btc5Nzd').textContent = fmtNzd(btc5Nzd);
+  document.getElementById('btc5Usd').textContent = fmtUsd(btc5Usd);
+  document.getElementById('mstrNzd').textContent = fmtNzd(mstrNzd);
+  document.getElementById('mstrUsd').textContent = fmtUsd(mstrUsd);
+  document.getElementById('visaUsd').textContent = fmtUsd(visaNzd * nzdToUsd);
+  document.getElementById('cashUsd').textContent = fmtUsd(cashNzd * nzdToUsd);
+
+  const assets = [
+    { box: 'includeBtc06', card: 'card-btc06', name: '0.6 BTC', nzd: btc06Nzd, usd: btc06Usd },
+    { box: 'includeVisa', card: 'card-visa', name: 'Visa', nzd: visaNzd, usd: visaNzd * nzdToUsd },
+    { box: 'includeCash', card: 'card-cash', name: 'Cash', nzd: cashNzd, usd: cashNzd * nzdToUsd },
+    { box: 'includeMstr', card: 'card-mstr', name: '11 MSTR', nzd: mstrNzd, usd: mstrUsd },
+    { box: 'includeBtc5', card: 'card-btc5', name: '5.0 BTC', nzd: btc5Nzd, usd: btc5Usd }
+  ];
+
+  let totalNzd = 0;
+  let totalUsd = 0;
+  const included = [];
+
+  assets.forEach(asset => {
+    const checked = document.getElementById(asset.box).checked;
+    setCardState(asset.card, checked);
+    if (checked) {
+      totalNzd += asset.nzd;
+      totalUsd += asset.usd;
+      included.push(asset.name);
+    }
+  });
+
+  document.getElementById('totalNzd').textContent = fmtNzd(totalNzd);
+  document.getElementById('totalUsd').textContent = fmtUsd(totalUsd);
+  document.getElementById('mixSummary').textContent = included.length
+    ? 'Included: ' + included.join(' · ')
+    : 'No assets currently included';
+}
+
+async function fetchBTC() {
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,nzd&include_24hr_change=true');
+    if (!res.ok) throw new Error('BTC request failed');
+    const data = await res.json();
+    btcUsd = data.bitcoin.usd;
+    btcNzd = data.bitcoin.nzd;
+    usdToNzd = btcNzd / btcUsd;
+    const change = data.bitcoin.usd_24h_change;
+    const line = fmtUsd(btcUsd) + ' per BTC · ' + (change >= 0 ? '▲ +' : '▼ ') + change.toFixed(2) + '% (24h)';
+    document.getElementById('btcPriceLine06').textContent = line;
+    document.getElementById('btcPriceLine5').textContent = line;
+    recalculate();
+  } catch (e) {
+    document.getElementById('btcPriceLine06').textContent = 'BTC price unavailable — check connection';
+    document.getElementById('btcPriceLine5').textContent = 'BTC price unavailable — check connection';
+  }
+}
+
+function saveData() {
+  const payload = {
+    visaAmount: document.getElementById('visaAmount').value,
+    cashAmount: document.getElementById('cashAmount').value,
+    mstrPriceInput: document.getElementById('mstrPriceInput').value,
+    includeBtc06: document.getElementById('includeBtc06').checked,
+    includeVisa: document.getElementById('includeVisa').checked,
+    includeCash: document.getElementById('includeCash').checked,
+    includeMstr: document.getElementById('includeMstr').checked,
+    includeBtc5: document.getElementById('includeBtc5').checked,
+    savedAt: new Date().toISOString()
+  };
+
+  localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+  const status = document.getElementById('saveStatus');
+  status.textContent = '✓ saved at ' + new Date().toLocaleTimeString('en-NZ');
+  status.classList.add('flash');
+  setTimeout(() => status.classList.remove('flash'), 2000);
+}
+
+function loadData() {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (!raw) {
+    document.getElementById('saveStatus').textContent = 'defaults loaded';
+    return;
+  }
+
+  try {
+    const p = JSON.parse(raw);
+    if (p.visaAmount !== undefined) document.getElementById('visaAmount').value = p.visaAmount;
+    if (p.cashAmount !== undefined) document.getElementById('cashAmount').value = p.cashAmount;
+    if (p.mstrPriceInput !== undefined) document.getElementById('mstrPriceInput').value = p.mstrPriceInput;
+    ['includeBtc06','includeVisa','includeCash','includeMstr','includeBtc5'].forEach(id => {
+      if (p[id] !== undefined) document.getElementById(id).checked = p[id];
+    });
+    const when = new Date(p.savedAt).toLocaleDateString('en-NZ', {
+      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+    document.getElementById('saveStatus').textContent = 'loaded · last saved ' + when;
+  } catch (e) {
+    document.getElementById('saveStatus').textContent = 'could not load saved data';
+  }
+}
+
+document.querySelectorAll('.editable-value').forEach(input => {
+  input.addEventListener('input', recalculate);
+  input.addEventListener('change', saveData);
+  input.addEventListener('focus', function() { this.select(); });
+});
+
+document.querySelectorAll('.include-box').forEach(box => {
+  box.addEventListener('change', () => {
+    recalculate();
+    saveData();
+  });
+});
+
+document.getElementById('dateDisplay').textContent =
+  new Date().toLocaleDateString('en-NZ', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+loadData();
+recalculate();
+fetchBTC().finally(() => {
+  document.getElementById('lastUpdated').textContent =
+    'BTC checked: ' + new Date().toLocaleTimeString('en-NZ') + ' · refreshes every 60 seconds · MSTR entered manually';
+});
+setInterval(fetchBTC, 60000);
+</script>
+</body>
+</html>
