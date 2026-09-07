@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitcoin House Calculator</title>
+<style>
+  :root{
+    --cream:#f6f0e2;
+    --cream-2:#fffaf0;
+    --gold:#b88a2b;
+    --gold-dark:#8b6518;
+    --ink:#2f2a21;
+    --muted:#766d5d;
+    --line:#dfd2b5;
+    --shadow:rgba(70,52,20,.12);
+    --success:#516646;
+    --error:#8f443d;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background:var(--cream);
+    color:var(--ink);
+    font-family:Arial, Helvetica, sans-serif;
+  }
+
+  .card{
+    width:min(620px, 100%);
+    background:var(--cream-2);
+    border:1px solid var(--line);
+    border-radius:22px;
+    padding:34px;
+    box-shadow:0 18px 45px var(--shadow);
+  }
+
+  h1{
+    margin:0 0 8px;
+    text-align:center;
+    font-size:clamp(28px,5vw,40px);
+    line-height:1.1;
+    font-weight:700;
+  }
+
+  .subtitle{
+    text-align:center;
+    color:var(--muted);
+    margin-bottom:30px;
+    font-size:15px;
+  }
+
+  .price-box{
+    border:1px solid var(--line);
+    background:#fbf5e7;
+    border-radius:16px;
+    padding:18px 20px;
+    margin-bottom:18px;
+  }
+
+  .label{
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:6px;
+  }
+
+  .price-row{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:18px;
+  }
+
+  .btc-price{
+    font-size:clamp(26px,6vw,40px);
+    font-weight:700;
+    color:var(--gold-dark);
+  }
+
+  .btc-price-nzd{
+    font-size:16px;
+    font-weight:700;
+    color:var(--muted);
+    white-space:nowrap;
+    padding-bottom:5px;
+    text-align:right;
+  }
+
+  .house-row{
+    display:flex;
+    gap:12px;
+    align-items:flex-end;
+    margin-bottom:26px;
+  }
+
+  .field{
+    flex:1;
+  }
+
+  input{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 15px;
+    background:#fffdf8;
+    color:var(--ink);
+    font-size:20px;
+    outline:none;
+  }
+
+  input:focus{
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(184,138,43,.12);
+  }
+
+  button{
+    border:0;
+    border-radius:12px;
+    padding:15px 18px;
+    background:var(--gold);
+    color:white;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+  }
+
+  button:hover{background:var(--gold-dark)}
+  button:disabled{opacity:.55;cursor:not-allowed}
+
+  .result{
+    text-align:center;
+    padding:28px 18px;
+    border-radius:18px;
+    background:#efe3c7;
+    border:1px solid #d8c18f;
+  }
+
+  .result .big{
+    margin-top:8px;
+    font-size:clamp(52px,12vw,86px);
+    line-height:1;
+    font-weight:800;
+    color:var(--gold-dark);
+  }
+
+  .result .unit{
+    font-size:22px;
+    font-weight:700;
+    margin-left:4px;
+  }
+
+  .status{
+    min-height:20px;
+    text-align:center;
+    margin-top:18px;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .status.error{color:var(--error)}
+  .status.ok{color:var(--success)}
+
+  .footer{
+    text-align:center;
+    margin-top:10px;
+    color:var(--muted);
+    font-size:12px;
+  }
+
+  @media (max-width:520px){
+    body{padding:14px}
+    .card{padding:24px 18px}
+    .house-row{flex-direction:column;align-items:stretch}
+    button{width:100%}
+  }
+</style>
+</head>
+<body>
+  <main class="card">
+    <h1>Bitcoin → NZ House</h1>
+    <div class="subtitle">How much Bitcoin equals the house price?</div>
+
+    <section class="price-box">
+      <div class="label">Live Bitcoin price</div>
+      <div class="price-row">
+        <div id="btcPriceUsd" class="btc-price">Loading…</div>
+        <div id="btcPriceNzd" class="btc-price-nzd">NZD —</div>
+      </div>
+    </section>
+
+    <div class="house-row">
+      <div class="field">
+        <div class="label">House value (NZD)</div>
+        <input id="housePrice" type="number" min="0" step="1000" value="450000">
+      </div>
+      <button id="refreshBtn" type="button">Refresh price</button>
+    </div>
+
+    <section class="result">
+      <div class="label">Bitcoin needed</div>
+      <div>
+        <span id="btcNeeded" class="big">—</span>
+        <span class="unit">BTC</span>
+      </div>
+    </section>
+
+    <div id="status" class="status">Fetching current BTC/NZD price…</div>
+    <div class="footer">Updates automatically every 60 seconds.</div>
+  </main>
+
+<script>
+  const btcPriceUsdEl = document.getElementById('btcPriceUsd');
+  const btcPriceNzdEl = document.getElementById('btcPriceNzd');
+  const btcNeededEl = document.getElementById('btcNeeded');
+  const housePriceEl = document.getElementById('housePrice');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const statusEl = document.getElementById('status');
+
+  let btcNzd = null;
+
+  const nzd = new Intl.NumberFormat('en-NZ', {
+    style: 'currency',
+    currency: 'NZD',
+    maximumFractionDigits: 0
+  });
+
+  const usd = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0
+  });
+
+  function calculate(){
+    const housePrice = Number(housePriceEl.value);
+    if (!btcNzd || !housePrice || housePrice <= 0){
+      btcNeededEl.textContent = '—';
+      return;
+    }
+    btcNeededEl.textContent = (housePrice / btcNzd).toFixed(1);
+  }
+
+  async function fetchBTCPrice(){
+    refreshBtn.disabled = true;
+    statusEl.className = 'status';
+    statusEl.textContent = 'Updating Bitcoin price…';
+
+    try{
+      const url = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,nzd';
+      const response = await fetch(url, { cache: 'no-store' });
+
+      if (!response.ok) throw new Error('Price service unavailable');
+
+      const data = await response.json();
+      const priceNzd = data?.bitcoin?.nzd;
+      const priceUsd = data?.bitcoin?.usd;
+
+      if (!priceNzd || !priceUsd) throw new Error('Price data incomplete');
+
+      btcNzd = Number(priceNzd);
+      btcPriceUsdEl.textContent = usd.format(Number(priceUsd));
+      btcPriceNzdEl.textContent = 'NZD ' + nzd.format(btcNzd).replace('NZ', '');
+      calculate();
+
+      const now = new Date();
+      statusEl.className = 'status ok';
+      statusEl.textContent = 'Updated ' + now.toLocaleTimeString('en-NZ', {
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    } catch (err){
+      statusEl.className = 'status error';
+      statusEl.textContent = 'Could not update the live BTC price. Check your internet connection and try Refresh.';
+    } finally{
+      refreshBtn.disabled = false;
+    }
+  }
+
+  housePriceEl.addEventListener('input', calculate);
+  refreshBtn.addEventListener('click', fetchBTCPrice);
+
+  fetchBTCPrice();
+  setInterval(fetchBTCPrice, 60000);
+</script>
+</body>
+</html>
